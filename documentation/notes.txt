@@ -1,0 +1,5 @@
+mobile implementation: iOS and Android(separate code bases)
+backend implementation: Java + Spring
+DB: MySQL
+load balancer: nginx
+neural network: Java
