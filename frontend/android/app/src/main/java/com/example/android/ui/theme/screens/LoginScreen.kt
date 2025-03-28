@@ -12,7 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.android.ui.theme.AndroidTheme
+import com.example.android.ui.theme.AppTheme
 
 @Composable
 fun LoginScreen(onNavigateToRegister: () -> Unit) {
@@ -27,8 +27,8 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
     ) {
         Text(
             text = "Login",
-            style = MaterialTheme.typography.headlineLarge
-            //color = MaterialTheme.colorScheme.tertiary
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
         )
 
         OutlinedTextField(
@@ -51,7 +51,8 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
             onClick = { Toast.makeText(context, "Logging in...", Toast.LENGTH_SHORT).show() },
             modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF9BC2E8),  // Background color
+                //containerColor = MaterialTheme.colorScheme.primary,
+                containerColor = MaterialTheme.colorScheme.primary,  // Background color
                 contentColor = MaterialTheme.colorScheme.onPrimary   // Text/icon color
             )
         ) {
