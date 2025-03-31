@@ -18,55 +18,61 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var egn by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var doc_id by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Register", style = MaterialTheme.typography.headlineLarge)
+        Text(text = "Регистрация", style = MaterialTheme.typography.headlineLarge)
 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("Full Name") },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            label = { Text("Три имена") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            singleLine = true
         )
 
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text("Email") },
+            label = { Text("Имейл") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            singleLine = true
         )
 
         OutlinedTextField(
             value = egn,
             onValueChange = { egn = it },
-            label = { Text("EGN (Personal Number)") },
+            label = { Text("ЕГН") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            singleLine = true
         )
 
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
+            value = doc_id,
+            onValueChange = { doc_id = it },
+            label = { Text("Номер на лична карта") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            singleLine = true
         )
 
         Button(
-            onClick = { Toast.makeText(context, "Registering...", Toast.LENGTH_SHORT).show() },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            onClick = {
+                Toast.makeText(context, "Регистриране...", Toast.LENGTH_SHORT).show()
+                      onNavigateToLogin},
+            modifier = Modifier.width(200.dp).padding(vertical = 8.dp)
         ) {
-            Text("Register")
+            Text("Регистрация")
         }
 
         TextButton(onClick = onNavigateToLogin) {
-            Text("Already have an account? Login here")
+            Text("Имаш профил? Влез тук.")
         }
     }
 }

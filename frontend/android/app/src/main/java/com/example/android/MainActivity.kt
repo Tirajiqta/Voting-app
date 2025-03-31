@@ -12,15 +12,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen
-import com.example.android.ui.theme.AppTheme
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.android.ui.theme.AppTheme
+import com.example.android.ui.theme.screens.HomeScreen
 import com.example.android.ui.theme.screens.LoginScreen
 import com.example.android.ui.theme.screens.RegisterScreen
 import com.example.android.ui.theme.screens.SplashScreen
+import com.example.compose.AppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,11 +44,51 @@ fun AppNavigator() {
             SplashScreen(navController)
         }
         composable("login") {
-            LoginScreen { navController.navigate("register") }
+            LoginScreen(
+                onLoginSuccess = {
+                    // Navigate to home after successful login
+                    navController.navigate("home") {
+                        popUpTo("login") { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
+                onNavigateToRegister = {
+                    // Navigate to the register screen
+                    navController.navigate("register")
+                }
+            )
         }
         composable("register") {
-            RegisterScreen { navController.popBackStack() }
+            RegisterScreen(onNavigateToLogin = { navController.popBackStack() })
         }
+        composable("home") {
+            HomeScreen(
+                onNavigateToSetting = { navController.navigate("settings") },
+                onNavigateToProfile = { navController.navigate("profile") },
+                // *** FIX 6 (Part 1): Define navigation for election clicks ***
+                // Pass a lambda that takes an election ID and navigates
+                onNavigateToVoteElection = { electionId ->
+                    navController.navigate("vote/$electionId") // Navigate to a vote screen with ID
+                }
+            )
+        }
+        composable("settings") {
+            //SettingsScreen(onNavigateBack = { navController.popBackStack() })
+        }
+        composable("profile") {
+            //ProfileScreen(onNavigateBack = { navController.popBackStack() })
+        }
+        // Example route for voting, taking an electionId argument
+        /*composable(
+            route = "vote/{electionId}",
+            arguments = listOf(navArgument("electionId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val electionId = backStackEntry.arguments?.getString("electionId")
+            VoteScreen(
+                electionId = electionId ?: "Unknown", // Handle null case
+                onNavigateBack = { navController.popBackStack() }
+            ) // Example
+        }*/
     }
 }
 

@@ -12,55 +12,67 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.android.ui.theme.AppTheme
+import com.example.compose.AppTheme
 
 @Composable
-fun LoginScreen(onNavigateToRegister: () -> Unit) {
+fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
     val context = LocalContext.current
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    var egn by remember { mutableStateOf("") }
+    var doc_id by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Login",
+            text = "Вход",
             style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primaryContainer
         )
 
         OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
+            value = egn,
+            onValueChange = { egn = it },
+            label = { Text("ЕГН") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            singleLine = true
+
         )
 
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Password") },
+            value = doc_id,
+            onValueChange = { doc_id = it },
+            label = { Text("Номер на лична карта") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            singleLine = true
         )
 
         Button(
-            onClick = { Toast.makeText(context, "Logging in...", Toast.LENGTH_SHORT).show() },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            onClick = {
+                Toast.makeText(context, "Влизане...", Toast.LENGTH_SHORT).show() 
+                onLoginSuccess()},
+            modifier = Modifier
+                .width(200.dp)
+                .padding(vertical = 8.dp),
             colors = ButtonDefaults.buttonColors(
-                //containerColor = MaterialTheme.colorScheme.primary,
                 containerColor = MaterialTheme.colorScheme.primary,  // Background color
                 contentColor = MaterialTheme.colorScheme.onPrimary   // Text/icon color
             )
         ) {
-            Text("Login")
+            Text("Влез")
         }
 
         TextButton(onClick = onNavigateToRegister) {
-            Text("Don't have an account? Register here")
+            Text("Регистрирай се тук!")
         }
     }
 }
@@ -68,5 +80,10 @@ fun LoginScreen(onNavigateToRegister: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen {}
+    AppTheme {
+        LoginScreen(
+            onLoginSuccess = {},
+            onNavigateToRegister = {}
+        )
+    }
 }
