@@ -45,11 +45,11 @@ fun SplashScreen(navController: NavController) {
                     contentDescription = "eVote Logo",
                     modifier = Modifier.size(130.dp)
                 )
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(25.dp))
                 Text(
                     text = "eVote",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 40.sp,
+                    fontWeight = FontWeight.W900
                 )
                 Spacer(modifier = Modifier.height(50.dp))
 

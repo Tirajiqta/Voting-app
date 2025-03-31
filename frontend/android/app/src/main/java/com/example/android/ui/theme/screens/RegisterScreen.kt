@@ -8,9 +8,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.example.compose.AppTheme
 
 @Composable
 fun RegisterScreen(onNavigateToLogin: () -> Unit) {
@@ -25,7 +28,13 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Регистрация", style = MaterialTheme.typography.headlineLarge)
+        Text(
+            text = "РЕГИСТРАЦИЯ",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 2.sp,
+        )
 
         OutlinedTextField(
             value = name,
@@ -65,10 +74,13 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit) {
         Button(
             onClick = {
                 Toast.makeText(context, "Регистриране...", Toast.LENGTH_SHORT).show()
-                      onNavigateToLogin},
-            modifier = Modifier.width(200.dp).padding(vertical = 8.dp)
+                      onNavigateToLogin()},
+            modifier = Modifier.width(220.dp).padding(vertical = 8.dp)
         ) {
-            Text("Регистрация")
+            Text(
+                "РЕГИСТРАЦИЯ",
+                letterSpacing = 3.sp,
+                fontSize = 20.sp)
         }
 
         TextButton(onClick = onNavigateToLogin) {
@@ -80,5 +92,7 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun RegisterScreenPreview() {
-    RegisterScreen {}
+    AppTheme {
+        RegisterScreen {}
+    }
 }

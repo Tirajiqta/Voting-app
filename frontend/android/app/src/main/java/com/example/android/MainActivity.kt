@@ -16,6 +16,7 @@ import androidx.core.splashscreen.SplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.android.ui.theme.screens.ElectionChoiceScreen
 import com.example.android.ui.theme.screens.HomeScreen
 import com.example.android.ui.theme.screens.LoginScreen
 import com.example.android.ui.theme.screens.RegisterScreen
@@ -65,20 +66,23 @@ fun AppNavigator() {
             HomeScreen(
                 onNavigateToSetting = { navController.navigate("settings") },
                 onNavigateToProfile = { navController.navigate("profile") },
-                // *** FIX 6 (Part 1): Define navigation for election clicks ***
-                // Pass a lambda that takes an election ID and navigates
-                onNavigateToVoteElection = { electionId ->
-                    navController.navigate("vote/$electionId") // Navigate to a vote screen with ID
+                onNavigateToVoteElection = {navController.navigate("choose_election")}
+            )
+        }
+        composable ("choose_election"){
+            ElectionChoiceScreen(
+                activeElections = listOf("Presidential Election", "Local Government Election"),
+                onNavigateToVote = { electionName ->
+                    navController.navigate("vote/$electionName")
                 }
             )
         }
-        composable("settings") {
-            //SettingsScreen(onNavigateBack = { navController.popBackStack() })
-        }
-        composable("profile") {
-            //ProfileScreen(onNavigateBack = { navController.popBackStack() })
-        }
-        // Example route for voting, taking an electionId argument
+//        composable("settings") {
+//            //SettingsScreen(onNavigateBack = { navController.popBackStack() })
+//        }
+//        composable("profile") {
+//            //ProfileScreen(onNavigateBack = { navController.popBackStack() })
+//        }
         /*composable(
             route = "vote/{electionId}",
             arguments = listOf(navArgument("electionId") { type = NavType.StringType })

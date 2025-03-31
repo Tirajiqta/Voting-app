@@ -9,9 +9,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.compose.AppTheme
 
 @Composable
@@ -28,9 +30,12 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Вход",
+            text = "ВХОД",
             style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primaryContainer
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.ExtraBold,
+            letterSpacing = 2.sp,
+            fontSize = 30.sp
         )
 
         OutlinedTextField(
@@ -42,7 +47,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
             singleLine = true
-
         )
 
         OutlinedTextField(
@@ -61,14 +65,17 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
                 Toast.makeText(context, "Влизане...", Toast.LENGTH_SHORT).show() 
                 onLoginSuccess()},
             modifier = Modifier
-                .width(200.dp)
+                .width(220.dp)
                 .padding(vertical = 8.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,  // Background color
                 contentColor = MaterialTheme.colorScheme.onPrimary   // Text/icon color
             )
         ) {
-            Text("Влез")
+            Text(
+                "ВЛЕЗ",
+                letterSpacing = 3.sp,
+                fontSize = 20.sp)
         }
 
         TextButton(onClick = onNavigateToRegister) {
