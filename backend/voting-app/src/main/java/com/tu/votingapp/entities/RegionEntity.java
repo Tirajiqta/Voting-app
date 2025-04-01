@@ -8,7 +8,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper=false)
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegionEntity extends BaseEntity {
+public class RegionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

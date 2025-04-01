@@ -3,15 +3,16 @@ package com.tu.votingapp.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @Data
 @Entity(name = "user")
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "user", schema = "voting")
-public class UserEntity extends BaseEntity {
+public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,7 +28,7 @@ public class UserEntity extends BaseEntity {
     private String email;
 
     @NonNull
-    @Column(name = "passwordHash", nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String password;
 
     @NonNull
@@ -47,8 +48,16 @@ public class UserEntity extends BaseEntity {
     @Column(name = "egn", nullable = false)
     private String egn;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "document_id", referencedColumnName = "id")
-    private List<DocumentEntity> documents;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "document_id", referencedColumnName = "id", nullable = false, unique = true)
+    private DocumentEntity document;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private List<RoleEntity> roles = new ArrayList<>();
 
 }

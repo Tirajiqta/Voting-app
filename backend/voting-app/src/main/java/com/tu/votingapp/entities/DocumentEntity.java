@@ -12,7 +12,7 @@ import java.sql.Date;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @ToString()
-public class DocumentEntity extends BaseEntity {
+public class DocumentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false, updatable = false)
@@ -45,5 +45,9 @@ public class DocumentEntity extends BaseEntity {
     @NonNull
     @Column(name = "permanent_address", nullable = false, updatable = false)
     private String permanentAddress;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private UserEntity user;
 
 }
