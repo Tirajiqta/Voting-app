@@ -2,6 +2,7 @@ package com.tu.votingapp.entities.elections;
 
 import com.tu.votingapp.entities.UserEntity;
 import com.tu.votingapp.enums.ElectionStatus;
+import com.tu.votingapp.enums.ElectionType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,6 +34,8 @@ public class ElectionEntity {
     @Column(name = "end_date")
     private Date endDate;
 
+    @Column(name = "election_type")
+    private ElectionType electionType;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "election_status")

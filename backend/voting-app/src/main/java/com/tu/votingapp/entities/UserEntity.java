@@ -41,8 +41,8 @@ public class UserEntity {
 
     @NonNull
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "region_id", referencedColumnName = "id", nullable = false)
-    private RegionEntity regionId;
+    @JoinColumn(name = "location_id", referencedColumnName = "id", nullable = false)
+    private LocationEntity regionId;
 
     @NonNull
     @Column(name = "egn", nullable = false)
