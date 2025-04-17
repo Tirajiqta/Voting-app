@@ -25,6 +25,8 @@ import com.example.android.dummymodel.Candidate // Import dummy data classes
 import com.example.android.dummymodel.Party    // Import dummy data classes
 import com.example.compose.AppTheme // Import your theme
 
+//Screen for EU parliament, BG parliament, local council
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class) // Added ExperimentalLayoutApi for FlowRow
 @Composable
 fun ParliamentVoteScreen(
@@ -85,7 +87,10 @@ fun ParliamentVoteScreen(
                     enabled = selectedPartyId != null, // Enabled only when a party is selected
                     modifier = Modifier.width(200.dp)
                 ) {
-                    Text("ПРЕГЛЕД", fontSize = 16.sp) // "REVIEW"
+                    Text(
+                        "ПРЕГЛЕД",
+                        letterSpacing = 4.sp,
+                        fontSize = 20.sp)
                 }
             }
         }
@@ -303,9 +308,9 @@ fun PreferenceCircle(
 @Composable
 fun ParliamentVoteScreenPreview() {
     // Sample Data for Preview
-    val sampleParties = List(9) { index ->
+    val sampleParties = List(7) { index ->
         Party(id = index + 1, name = "Партия / Коалиция ${index + 1}")
-    }.plus(Party(id = 10, name = "Партия на Зелените")) // Match screenshot party 10
+    }.plus(Party(id = 8, name = "Не подкрепям никого"))
 
     val sampleCandidates = listOf(
         // Candidates for Party 8
@@ -320,10 +325,10 @@ fun ParliamentVoteScreenPreview() {
         Candidate(id = 109, name = "Канд. 9", partyId = 5),
         Candidate(id = 110, name = "Канд. 10", partyId = 5),
         Candidate(id = 111, name = "Канд. 11", partyId = 6),
-        Candidate(id = 112, name = "Канд. 12", partyId = 8),
+        Candidate(id = 112, name = "Канд. 12", partyId = 6),
         // Add candidates for other parties if needed for testing
-        Candidate(id = 101, name = "Друг 1", partyId = 9),
-        Candidate(id = 102, name = "Друг 2", partyId = 9),
+        Candidate(id = 101, name = "Друг 1", partyId = 7),
+        Candidate(id = 102, name = "Друг 2", partyId = 7),
     )
 
     AppTheme {
