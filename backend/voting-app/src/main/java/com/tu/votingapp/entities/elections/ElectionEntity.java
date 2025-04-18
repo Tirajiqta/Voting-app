@@ -44,6 +44,9 @@ public class ElectionEntity {
     @OneToMany(mappedBy = "election", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CandidateEntity> candidates = new ArrayList<>();
 
+    @OneToMany(mappedBy = "election", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PartyEntity> parties = new ArrayList<>();
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")

@@ -4,5 +4,8 @@ public enum ReferendumStatus {
     UPCOMING,
     ACTIVE,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    DRAFT,
+    SCHEDULED,
+    OPEN
 }

@@ -4,5 +4,9 @@ public enum SurveyStatus {
     UPCOMING,
     ACTIVE,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    DRAFT,
+    SCHEDULED,
+    OPEN,
+    CLOSED,
 }
