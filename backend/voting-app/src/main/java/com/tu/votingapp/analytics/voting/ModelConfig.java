@@ -11,47 +11,64 @@ import org.nd4j.linalg.learning.config.Adam;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 @Configuration
 public class ModelConfig {
+    private final Logger logger = Logger.getLogger(ModelConfig.class.getName());
+
     @Bean
     public ComputationGraph analyticsModel() {
+        logger.info("Initializing analyticsModel computation graph configuration");
         int numFeatures = 10;      // feature vector size
         int numCandidates = 5;     // adjust per election
         int hiddenSize = 32;
 
-        GraphBuilder gb = new NeuralNetConfiguration.Builder()
-                .updater(new Adam(1e-3))
-                .graphBuilder()
-                .addInputs("features")
-                // shared dense layer
-                .addLayer("dense1", new DenseLayer.Builder()
-                                .nIn(numFeatures)
-                                .nOut(hiddenSize)
-                                .activation(Activation.valueOf("relu")).build(),
-                        "features")
-                // Winner-probability output
-                .addLayer("winnerOut",
-                        new OutputLayer.Builder()
-                                .nIn(hiddenSize).nOut(numCandidates)
-                                .activation(Activation.valueOf("softmax"))
-                                .lossFunction(org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction.MCXENT)
-                                .build(),
-                        "dense1")
-                // Turnout prediction output
-                .addLayer("turnoutOut",
-                        new OutputLayer.Builder()
-                                .nIn(hiddenSize).nOut(1)
-                                .activation(Activation.valueOf("identity"))
-                                .lossFunction(org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction.MSE)
-                                .build(),
-                        "dense1")
-                .setOutputs("winnerOut", "turnoutOut");
+        try {
+            GraphBuilder gb = new NeuralNetConfiguration.Builder()
+                    .updater(new Adam(1e-3))
+                    .graphBuilder()
+                    .addInputs("features")
+                    // shared dense layer
+                    .addLayer("dense1", new DenseLayer.Builder()
+                                    .nIn(numFeatures)
+                                    .nOut(hiddenSize)
+                                    .activation(Activation.RELU)
+                                    .build(),
+                            "features")
+                    // Winner-probability output
+                    .addLayer("winnerOut",
+                            new OutputLayer.Builder()
+                                    .nIn(hiddenSize)
+                                    .nOut(numCandidates)
+                                    .activation(Activation.SOFTMAX)
+                                    .lossFunction(
+                                            org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction.MCXENT)
+                                    .build(),
+                            "dense1")
+                    // Turnout prediction output
+                    .addLayer("turnoutOut",
+                            new OutputLayer.Builder()
+                                    .nIn(hiddenSize)
+                                    .nOut(1)
+                                    .activation(Activation.IDENTITY)
+                                    .lossFunction(
+                                            org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction.MSE)
+                                    .build(),
+                            "dense1")
+                    .setOutputs("winnerOut", "turnoutOut");
 
-        ComputationGraphConfiguration conf = gb.build();
-        ComputationGraph model = new ComputationGraph(conf);
-        model.init();
-        model.setListeners(new ScoreIterationListener(10));
-        return model;
+            ComputationGraphConfiguration conf = gb.build();
+            logger.fine("Model configuration built successfully");
+            ComputationGraph model = new ComputationGraph(conf);
+            model.init();
+            model.setListeners(new ScoreIterationListener(10));
+            logger.info("ComputationGraph initialized and listeners attached");
+            return model;
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Failed to initialize analyticsModel", e);
+            throw new IllegalStateException("Could not create analyticsModel", e);
+        }
     }
 }
-

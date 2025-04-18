@@ -6,10 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 public abstract class BaseController<T, ID> {
 
     protected abstract BaseService<T, ID> getService();
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     @GetMapping
     public ResponseEntity<List<T>> getAll() {

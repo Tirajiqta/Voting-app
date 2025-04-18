@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,22 +19,32 @@ import java.util.stream.Collectors;
 public class MunicipalityServiceImpl implements MunicipalityService {
     private final MunicipalityRepository municipalityRepository;
     private final RegionRepository regionRepository;
+    private final Logger logger = Logger.getLogger(MunicipalityServiceImpl.class.getName());
 
     @Override
     public List<MunicipalityResponseDTO> listMunicipalities() {
-        return municipalityRepository.findAll().stream().map(e -> {
-            RegionEntity r = e.getRegion();
-            RegionResponseDTO rdto = new RegionResponseDTO(r.getId(), r.getName(), r.getPopulation());
-            return new MunicipalityResponseDTO(e.getId(), e.getName(), e.getPopulation(), rdto);
-        }).collect(Collectors.toList());
+        logger.info("Listing all municipalities");
+        List<MunicipalityResponseDTO> list = municipalityRepository.findAll()
+                .stream()
+                .map(e -> {
+                    RegionEntity r = e.getRegion();
+                    RegionResponseDTO rdto = new RegionResponseDTO(r.getId(), r.getName(), r.getPopulation());
+                    return new MunicipalityResponseDTO(e.getId(), e.getName(), e.getPopulation(), rdto);
+                })
+                .collect(Collectors.toList());
+        logger.fine(() -> "Retrieved " + list.size() + " municipalities");
+        return list;
     }
 
     @Override
     public MunicipalityResponseDTO getMunicipalityById(Long id) {
+        logger.info(() -> "Fetching municipality id=" + id);
         MunicipalityEntity e = municipalityRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Municipality not found"));
+                .orElseThrow(() -> new RuntimeException("Municipality not found: " + id));
         RegionEntity r = e.getRegion();
         RegionResponseDTO rdto = new RegionResponseDTO(r.getId(), r.getName(), r.getPopulation());
-        return new MunicipalityResponseDTO(e.getId(), e.getName(), e.getPopulation(), rdto);
+        MunicipalityResponseDTO dto = new MunicipalityResponseDTO(e.getId(), e.getName(), e.getPopulation(), rdto);
+        logger.fine(() -> "Fetched municipality: " + dto.getName());
+        return dto;
     }
 }

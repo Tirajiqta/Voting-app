@@ -15,6 +15,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.logging.Logger;
+
+/**
+ * REST endpoints for managing referendums and voting.
+ */
 @RestController
 @RequestMapping("/api/referendums")
 @Validated
@@ -22,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class ReferendumController {
 
     private final ReferendumService referendumService;
+    private final Logger logger = Logger.getLogger(ReferendumController.class.getName());
 
     /**
      * Create a new referendum.
@@ -29,9 +35,10 @@ public class ReferendumController {
     @PostMapping
     @Validated(ValidationGroups.Create.class)
     public ResponseEntity<ReferendumResponseDTO> createReferendum(
-            @Valid @RequestBody ReferendumRequestDTO request
-    ) {
+            @Valid @RequestBody ReferendumRequestDTO request) {
+        logger.info(() -> "Creating referendum: title='" + request.getTitle() + "'");
         ReferendumResponseDTO response = referendumService.createReferendum(request);
+        logger.info(() -> "Created referendum id=" + response.getId());
         return ResponseEntity.ok(response);
     }
 
@@ -42,10 +49,11 @@ public class ReferendumController {
     @Validated(ValidationGroups.Update.class)
     public ResponseEntity<ReferendumResponseDTO> updateReferendum(
             @PathVariable Long id,
-            @Valid @RequestBody ReferendumRequestDTO request
-    ) {
+            @Valid @RequestBody ReferendumRequestDTO request) {
+        logger.info(() -> "Updating referendum id=" + id);
         request.setId(id);
         ReferendumResponseDTO response = referendumService.updateReferendum(request);
+        logger.info(() -> "Updated referendum id=" + response.getId());
         return ResponseEntity.ok(response);
     }
 
@@ -54,7 +62,9 @@ public class ReferendumController {
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteReferendum(@PathVariable Long id) {
+        logger.info(() -> "Deleting referendum id=" + id);
         referendumService.deleteReferendum(id);
+        logger.info(() -> "Deleted referendum id=" + id);
         return ResponseEntity.noContent().build();
     }
 
@@ -63,7 +73,9 @@ public class ReferendumController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<ReferendumResponseDTO> getReferendum(@PathVariable Long id) {
+        logger.info(() -> "Fetching referendum id=" + id);
         ReferendumResponseDTO response = referendumService.getReferendumById(id);
+        logger.fine(() -> "Fetched referendum: '" + response.getTitle() + "'");
         return ResponseEntity.ok(response);
     }
 
@@ -74,11 +86,12 @@ public class ReferendumController {
     public ResponseEntity<PagedResponseDTO<ReferendumResponseDTO>> listReferendums(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) ReferendumStatus status
-    ) {
-        PagedResponseDTO<ReferendumResponseDTO> response =
+            @RequestParam(required = false) ReferendumStatus status) {
+        logger.info(() -> String.format("Listing referendums: page=%d, size=%d, status=%s", page, size, status));
+        PagedResponseDTO<ReferendumResponseDTO> pageDto =
                 referendumService.listReferendums(page, size, status);
-        return ResponseEntity.ok(response);
+        logger.fine(() -> String.format("Listed %d referendums on page %d", pageDto.getContent().size(), pageDto.getPage()));
+        return ResponseEntity.ok(pageDto);
     }
 
     /**
@@ -87,13 +100,11 @@ public class ReferendumController {
     @PostMapping("/{id}/votes")
     public ResponseEntity<ReferendumVoteResponseDTO> castVote(
             @PathVariable("id") Long referendumId,
-            @Valid @RequestBody ReferendumVoteRequestDTO request
-    ) {
-        // ensure path and payload IDs match (optional)
-        if (!referendumId.equals(request.getReferendumId())) {
-            throw new IllegalArgumentException("Path referendumId must match request payload");
-        }
+            @Valid @RequestBody ReferendumVoteRequestDTO request) {
+        logger.info(() -> "Casting vote in referendum id=" + referendumId +
+                ", optionId=" + request.getOptionId());
         ReferendumVoteResponseDTO response = referendumService.castVote(request);
+        logger.info(() -> "Vote recorded id=" + response.getId());
         return ResponseEntity.ok(response);
     }
 
@@ -102,7 +113,9 @@ public class ReferendumController {
      */
     @GetMapping("/{id}/results")
     public ResponseEntity<ReferendumResultsDTO> getResults(@PathVariable Long id) {
+        logger.info(() -> "Fetching results for referendum id=" + id);
         ReferendumResultsDTO response = referendumService.getResults(id);
+        logger.fine(() -> String.format("Results: %d option results", response.getOptionResults().size()));
         return ResponseEntity.ok(response);
     }
 }

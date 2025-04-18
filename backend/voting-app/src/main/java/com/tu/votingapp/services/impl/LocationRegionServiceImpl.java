@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,33 +23,42 @@ import java.util.stream.Collectors;
 public class LocationRegionServiceImpl implements LocationRegionService {
     private final LocationRegionRepository locationRegionRepository;
     private final LocationRepository locationRepository;
+    private final Logger logger = Logger.getLogger(LocationRegionServiceImpl.class.getName());
 
     @Override
     public List<LocationRegionResponseDTO> listLocationRegions() {
-        return locationRegionRepository.findAll().stream().map(e -> {
-            LocationEntity loc = locationRepository.findById(e.getLocation().getId())
-                    .orElseThrow(() -> new RuntimeException("Location not found"));
-            MunicipalityEntity m = loc.getMunicipality();
-            RegionEntity r = m.getRegion();
-            RegionResponseDTO rdto = new RegionResponseDTO(r.getId(), r.getName(), r.getPopulation());
-            MunicipalityResponseDTO mdto = new MunicipalityResponseDTO(m.getId(), m.getName(), m.getPopulation(), rdto);
-            LocationResponseDTO ldto = new LocationResponseDTO(loc.getId(), loc.getName(), mdto);
-            return new LocationRegionResponseDTO(e.getId(), e.getName(), ldto);
-        }).collect(Collectors.toList());
+        logger.info("Listing all location-region mappings");
+        List<LocationRegionResponseDTO> list = locationRegionRepository.findAll()
+                .stream()
+                .map(e -> {
+                    LocationEntity loc = locationRepository.findById(e.getLocation().getId())
+                            .orElseThrow(() -> new RuntimeException("Location not found: " + e.getLocation().getId()));
+                    MunicipalityEntity m = loc.getMunicipality();
+                    RegionEntity r = m.getRegion();
+                    RegionResponseDTO rdto = new RegionResponseDTO(r.getId(), r.getName(), r.getPopulation());
+                    MunicipalityResponseDTO mdto = new MunicipalityResponseDTO(m.getId(), m.getName(), m.getPopulation(), rdto);
+                    LocationResponseDTO ldto = new LocationResponseDTO(loc.getId(), loc.getName(), mdto);
+                    return new LocationRegionResponseDTO(e.getId(), e.getName(), ldto);
+                })
+                .collect(Collectors.toList());
+        logger.fine(() -> "Retrieved " + list.size() + " location-region mappings");
+        return list;
     }
 
     @Override
     public LocationRegionResponseDTO getLocationRegionById(Long id) {
+        logger.info(() -> "Fetching location-region id=" + id);
         LocationRegionEntity e = locationRegionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("LocationRegion not found"));
+                .orElseThrow(() -> new RuntimeException("LocationRegion not found: " + id));
         LocationEntity loc = locationRepository.findById(e.getLocation().getId())
-                .orElseThrow(() -> new RuntimeException("Location not found"));
+                .orElseThrow(() -> new RuntimeException("Location not found: " + e.getLocation().getId()));
         MunicipalityEntity m = loc.getMunicipality();
         RegionEntity r = m.getRegion();
         RegionResponseDTO rdto = new RegionResponseDTO(r.getId(), r.getName(), r.getPopulation());
         MunicipalityResponseDTO mdto = new MunicipalityResponseDTO(m.getId(), m.getName(), m.getPopulation(), rdto);
         LocationResponseDTO ldto = new LocationResponseDTO(loc.getId(), loc.getName(), mdto);
-        return new LocationRegionResponseDTO(e.getId(), e.getName(), ldto);
+        LocationRegionResponseDTO dto = new LocationRegionResponseDTO(e.getId(), e.getName(), ldto);
+        logger.fine(() -> "Fetched location-region: " + dto.getName());
+        return dto;
     }
 }
-

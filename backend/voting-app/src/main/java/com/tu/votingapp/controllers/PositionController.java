@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/api/position")
@@ -25,49 +26,73 @@ public class PositionController {
     private final MunicipalityService municipalityService;
     private final LocationService locationService;
     private final LocationRegionService locationRegionService;
+    private final Logger logger = Logger.getLogger(PositionController.class.getName());
 
     // Regions
     @GetMapping("/regions")
     public ResponseEntity<List<RegionResponseDTO>> listRegions() {
-        return ResponseEntity.ok(regionService.listRegions());
+        logger.info("Listing all regions");
+        List<RegionResponseDTO> list = regionService.listRegions();
+        logger.fine(() -> "Retrieved " + list.size() + " regions");
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/regions/{id}")
     public ResponseEntity<RegionResponseDTO> getRegion(@PathVariable Long id) {
-        return ResponseEntity.ok(regionService.getRegionById(id));
+        logger.info(() -> "Fetching region id=" + id);
+        RegionResponseDTO dto = regionService.getRegionById(id);
+        logger.fine(() -> "Fetched region: " + dto.getName());
+        return ResponseEntity.ok(dto);
     }
 
     // Municipalities
     @GetMapping("/municipalities")
     public ResponseEntity<List<MunicipalityResponseDTO>> listMunicipalities() {
-        return ResponseEntity.ok(municipalityService.listMunicipalities());
+        logger.info("Listing all municipalities");
+        List<MunicipalityResponseDTO> list = municipalityService.listMunicipalities();
+        logger.fine(() -> "Retrieved " + list.size() + " municipalities");
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/municipalities/{id}")
     public ResponseEntity<MunicipalityResponseDTO> getMunicipality(@PathVariable Long id) {
-        return ResponseEntity.ok(municipalityService.getMunicipalityById(id));
+        logger.info(() -> "Fetching municipality id=" + id);
+        MunicipalityResponseDTO dto = municipalityService.getMunicipalityById(id);
+        logger.fine(() -> "Fetched municipality: " + dto.getName());
+        return ResponseEntity.ok(dto);
     }
 
     // Locations
     @GetMapping("/locations")
     public ResponseEntity<List<LocationResponseDTO>> listLocations() {
-        return ResponseEntity.ok(locationService.listLocations());
+        logger.info("Listing all locations");
+        List<LocationResponseDTO> list = locationService.listLocations();
+        logger.fine(() -> "Retrieved " + list.size() + " locations");
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/locations/{id}")
     public ResponseEntity<LocationResponseDTO> getLocation(@PathVariable Long id) {
-        return ResponseEntity.ok(locationService.getLocationById(id));
+        logger.info(() -> "Fetching location id=" + id);
+        LocationResponseDTO dto = locationService.getLocationById(id);
+        logger.fine(() -> "Fetched location: " + dto.getName());
+        return ResponseEntity.ok(dto);
     }
 
     // Location-Region mappings
     @GetMapping("/location-regions")
     public ResponseEntity<List<LocationRegionResponseDTO>> listLocationRegions() {
-        return ResponseEntity.ok(locationRegionService.listLocationRegions());
+        logger.info("Listing all location-region mappings");
+        List<LocationRegionResponseDTO> list = locationRegionService.listLocationRegions();
+        logger.fine(() -> "Retrieved " + list.size() + " location-region entries");
+        return ResponseEntity.ok(list);
     }
 
     @GetMapping("/location-regions/{id}")
     public ResponseEntity<LocationRegionResponseDTO> getLocationRegion(@PathVariable Long id) {
-        return ResponseEntity.ok(locationRegionService.getLocationRegionById(id));
+        logger.info(() -> "Fetching location-region id=" + id);
+        LocationRegionResponseDTO dto = locationRegionService.getLocationRegionById(id);
+        logger.fine(() -> "Fetched location-region: " + dto.getName());
+        return ResponseEntity.ok(dto);
     }
 }
-

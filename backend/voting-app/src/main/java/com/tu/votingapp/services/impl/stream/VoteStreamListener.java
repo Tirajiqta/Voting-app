@@ -4,9 +4,12 @@ import com.tu.votingapp.analytics.voting.FeatureAggregator;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
+import java.util.logging.Logger;
+
 @Service
 public class VoteStreamListener {
     private final FeatureAggregator aggregator;
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
 
     public VoteStreamListener(FeatureAggregator aggregator) {
         this.aggregator = aggregator;

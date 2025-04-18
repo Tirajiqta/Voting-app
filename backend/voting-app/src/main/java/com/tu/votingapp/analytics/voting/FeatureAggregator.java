@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 public class FeatureAggregator {
@@ -15,8 +17,10 @@ public class FeatureAggregator {
     public static final double ANOMALY_THRESHOLD_MULTIPLIER = 2.0;
     public static final double TREND_THRESHOLD = 0.05; // 5% change
 
+    private final Logger logger = Logger.getLogger(this.getClass().getName());
+
     /**
-     * Raw vote counts per election -> candidateId -> count
+     * Raw vote counts per election -> candidateId or partyId -> count
      */
     private final Map<Long, Map<Long, Integer>> counts = new ConcurrentHashMap<>();
 
@@ -26,27 +30,36 @@ public class FeatureAggregator {
     @Getter
     private final Map<Long, List<Snapshot>> history = new ConcurrentHashMap<>();
 
+    /**
+     * Ingest a vote event JSON, update counts and record a snapshot.
+     */
     public void aggregateEvent(String messageJson) {
         try {
             VoteEvent event = mapper.readValue(messageJson, VoteEvent.class);
-            counts.computeIfAbsent(event.getElectionId(), k -> new ConcurrentHashMap<>());
-            Map<Long, Integer> electionCounts = counts.get(event.getElectionId());
-
-            // Increment candidate or party count
+            Long electionId = event.getElectionId();
             Long key = event.getCandidateId() != null ? event.getCandidateId() : event.getPartyId();
-            electionCounts.merge(key, 1, Integer::sum);
+            logger.fine(() -> String.format("Processing vote event for election %d, key %d", electionId, key));
 
-            // Create a new snapshot after each event
-            Snapshot snap = new Snapshot(System.currentTimeMillis(), new HashMap<>(electionCounts));
-            history.computeIfAbsent(event.getElectionId(), k -> new ArrayList<>()).add(snap);
+            counts.computeIfAbsent(electionId, k -> new ConcurrentHashMap<>());
+            Map<Long, Integer> electionCounts = counts.get(electionId);
+            int newCount = electionCounts.merge(key, 1, Integer::sum);
+            logger.fine(() -> String.format("Updated count for key %d: %d", key, newCount));
+
+            // Record snapshot
+            Map<Long, Integer> snapshotMap = new HashMap<>(electionCounts);
+            Snapshot snap = new Snapshot(System.currentTimeMillis(), snapshotMap);
+            history.computeIfAbsent(electionId, k -> new ArrayList<>()).add(snap);
+            logger.fine(() -> String.format("Snapshot added for election %d; total snapshots: %d",
+                    electionId, history.get(electionId).size()));
+
         } catch (Exception e) {
-            // Log JSON parsing errors
-            e.printStackTrace();
+            // Log JSON parsing or processing errors without leaking raw payload
+            logger.log(Level.WARNING, "Failed to aggregate vote event", e);
         }
     }
 
     /**
-     * Builds a feature vector: [ totalVotes, countCandidate1, countCandidate2, ... ]
+     * Builds a feature vector: [ totalVotes, count1, count2, ... ]
      */
     public INDArray getFeatures(Long electionId) {
         Map<Long, Integer> electionCounts = counts.getOrDefault(electionId, Collections.emptyMap());
@@ -58,22 +71,19 @@ public class FeatureAggregator {
         for (Integer count : electionCounts.values()) {
             arr[i++] = count;
         }
-        return Nd4j.create(arr).reshape(1, arr.length);
+        INDArray features = Nd4j.create(arr).reshape(1, arr.length);
+        logger.fine(() -> String.format("Features generated for election %d: total=%d, dimensions=%d", electionId, total, arr.length));
+        return features;
     }
 
     /**
      * Simple JSON holder for vote events.
      */
     private static class VoteEvent {
-        // getters/setters omitted for brevity
-        @Getter
-        private Long electionId;
-        @Getter
-        private Long candidateId;
-        @Getter
-        private Long partyId;
+        @Getter private Long electionId;
+        @Getter private Long candidateId;
+        @Getter private Long partyId;
         private long timestamp;
-
     }
 
     /**
