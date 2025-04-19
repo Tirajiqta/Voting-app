@@ -63,9 +63,10 @@ fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit,
                 .padding(16.dp)
                 .background(MaterialTheme.colorScheme.surfaceContainerLowest),
             //verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Spacer(Modifier.height(100.dp))
+            //Spacer(Modifier.height(100.dp))
             Image(
                 painter = painterResource(id = R.drawable.voting), // Your logo image
                 contentDescription = "eVote Logo",
