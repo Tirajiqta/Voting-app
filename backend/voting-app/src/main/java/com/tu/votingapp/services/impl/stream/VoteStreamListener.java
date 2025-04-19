@@ -17,7 +17,12 @@ public class VoteStreamListener {
 
     @KafkaListener(topics = "votes", groupId = "voting-analytics-group")
     public void onVoteEvent(String message) {
-        // message is JSON: {"electionId":...,"candidateId":...,"partyId":...,"timestamp":...}
-        aggregator.aggregateEvent(message);
+        logger.info(() -> "Received vote event message, length=" + message.length());
+        try {
+            aggregator.aggregateEvent(message);
+            logger.fine(() -> "Successfully processed vote event");
+        } catch (Exception ex) {
+            logger.severe("Failed to process vote event, exception = " + ex);
+        }
     }
 }

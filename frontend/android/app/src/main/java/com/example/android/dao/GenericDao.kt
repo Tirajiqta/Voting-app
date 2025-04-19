@@ -4,7 +4,7 @@ import android.database.sqlite.SQLiteDatabase
 import com.example.android.db.orm.DbApi
 import kotlin.reflect.KClass
 
-class GenericDao<T : Any>(
+open class GenericDao<T : Any>(
     private val db: SQLiteDatabase,
     private val clazz: KClass<T>
 ) {
@@ -16,6 +16,9 @@ class GenericDao<T : Any>(
 
     fun getAll(): List<T> = DbApi.queryAll(db, clazz)
 
-    fun queryWhere(where: String, args: Array<String>): List<T> =
-        DbApi.queryWhere(db, clazz, where, args)
+    fun queryWhere(where: String, args: Array<String>): List<T> = DbApi.queryWhere(db, clazz, where, args)
+
+    fun getById(id: Long): T? {
+        return queryWhere("id = ?", arrayOf(id.toString())).firstOrNull()
+    }
 }

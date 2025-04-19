@@ -1,4 +1,4 @@
-package com.example.android.http.api
+package com.example.android.api
 
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.decodeFromString
@@ -9,27 +9,21 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 
 internal object ApiClient {
-    val client = OkHttpClient()
-    val json = Json { ignoreUnknownKeys = true }
+    private val client = OkHttpClient()
+    private val json = Json { ignoreUnknownKeys = true }
 
-    inline fun <reified T : Any> post(
+    inline fun <reified Req : Any, reified Res : Any> post(
         url: String,
-        body: T,
+        body: Req,
         headers: Map<String, String> = emptyMap(),
-        crossinline onSuccess: (String) -> Unit,
+        crossinline onSuccess: (Res) -> Unit,
         crossinline onFailure: (Throwable) -> Unit
     ) {
-
         val jsonBody = json.encodeToString(body)
         val requestBody = jsonBody.toRequestBody("application/json".toMediaType())
 
-        val requestBuilder = Request.Builder()
-            .url(url)
-            .post(requestBody)
-
-        headers.forEach { (key, value) ->
-            requestBuilder.addHeader(key, value)
-        }
+        val requestBuilder = Request.Builder().url(url).post(requestBody)
+        headers.forEach { (key, value) -> requestBuilder.addHeader(key, value) }
 
         client.newCall(requestBuilder.build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onFailure(e)
@@ -37,7 +31,13 @@ internal object ApiClient {
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     if (it.isSuccessful) {
-                        onSuccess(it.body?.string() ?: "")
+                        val bodyString = it.body?.string() ?: ""
+                        try {
+                            val result = json.decodeFromString<Res>(bodyString)
+                            onSuccess(result)
+                        } catch (e: Exception) {
+                            onFailure(e)
+                        }
                     } else {
                         onFailure(IOException("HTTP ${it.code}: ${it.message}"))
                     }
@@ -52,23 +52,18 @@ internal object ApiClient {
         crossinline onSuccess: (T) -> Unit,
         crossinline onFailure: (Throwable) -> Unit
     ) {
-        val request = Request.Builder()
-            .url(url)
-            .apply {
-                headers.forEach { (k, v) -> addHeader(k, v) }
-            }
-            .get()
-            .build()
+        val requestBuilder = Request.Builder().url(url).get()
+        headers.forEach { (k, v) -> requestBuilder.addHeader(k, v) }
 
-        client.newCall(request).enqueue(object : Callback {
+        client.newCall(requestBuilder.build()).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) = onFailure(e)
 
             override fun onResponse(call: Call, response: Response) {
                 response.use {
                     if (it.isSuccessful) {
-                        val body = it.body?.string() ?: ""
+                        val bodyString = it.body?.string() ?: ""
                         try {
-                            val result = json.decodeFromString<T>(body)
+                            val result = json.decodeFromString<T>(bodyString)
                             onSuccess(result)
                         } catch (e: Exception) {
                             onFailure(e)
