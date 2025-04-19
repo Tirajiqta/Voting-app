@@ -16,9 +16,11 @@ import androidx.core.splashscreen.SplashScreen
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.android.dummymodel.UserProfile
 import com.example.android.ui.theme.screens.ElectionChoiceScreen
 import com.example.android.ui.theme.screens.HomeScreen
 import com.example.android.ui.theme.screens.LoginScreen
+import com.example.android.ui.theme.screens.ProfileScreen
 import com.example.android.ui.theme.screens.RegisterScreen
 import com.example.android.ui.theme.screens.SplashScreen
 import com.example.compose.AppTheme
@@ -80,9 +82,21 @@ fun AppNavigator() {
 //        composable("settings") {
 //            //SettingsScreen(onNavigateBack = { navController.popBackStack() })
 //        }
-//        composable("profile") {
-//            //ProfileScreen(onNavigateBack = { navController.popBackStack() })
-//        }
+        composable("profile") {
+                val placeholderProfile: UserProfile? = UserProfile(
+                fullName = "Иван Иванов (Пример)",
+                egn = "8501011234",
+                idCardNumber = "645123456",
+                address = "гр. София, ул. Примерна 15",
+                idCardFrontUrl = null,
+                idCardBackUrl = null
+            )
+            ProfileScreen(
+                userProfile = placeholderProfile,
+                onNavigateBack = { navController.popBackStack()
+                }
+            )
+        }
         /*composable(
             route = "vote/{electionId}",
             arguments = listOf(navArgument("electionId") { type = NavType.StringType })

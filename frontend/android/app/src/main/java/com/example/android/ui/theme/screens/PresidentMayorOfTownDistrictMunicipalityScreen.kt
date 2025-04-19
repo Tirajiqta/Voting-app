@@ -220,6 +220,7 @@ fun PresidentialItem(
             text = option.partyName,
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.weight(1f)
+                .padding(start = 12.dp)
         )
     }
 }
