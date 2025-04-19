@@ -45,9 +45,9 @@ fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit,
                     IconButton(onClick = { onNavigateToProfile() }) {
                         Icon(Icons.Default.Person, contentDescription = "Profile")
                     }
-                    IconButton(onClick = { onNavigateToSetting() }) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
+//                    IconButton(onClick = { onNavigateToSetting() }) {
+//                        Icon(Icons.Default.Settings, contentDescription = "Settings")
+//                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest

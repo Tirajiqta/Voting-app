@@ -191,14 +191,15 @@ fun SelectionSummaryCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 8.dp),
+                fontSize = 16.sp
             )
             Divider()
             Spacer(modifier = Modifier.height(8.dp))
@@ -215,12 +216,14 @@ fun SelectionDetailRow(label: String, value: String) {
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(0.4f) // Adjust weight as needed
+            modifier = Modifier.weight(0.4f),
+            fontSize = 16.sp
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(0.6f)
+            modifier = Modifier.weight(0.6f),
+            fontSize = 16.sp
         )
     }
     Spacer(modifier = Modifier.height(4.dp)) // Small space between detail rows
