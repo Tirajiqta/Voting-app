@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,12 +41,14 @@ fun ReferendumScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Референдум") }, // Or pass title as parameter
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Назад")
-                    }
-                },
+                title = { Text(
+                    "eVote",
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.padding( start = 8.dp)
+                ) },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                 )
@@ -76,24 +79,28 @@ fun ReferendumScreen(
                 .fillMaxSize()
                 .padding(paddingValues) // Apply padding from Scaffold
                 .padding(horizontal = 16.dp), // Horizontal padding for list content
-            contentPadding = PaddingValues(vertical = 16.dp) // Padding top/bottom of list
+            contentPadding = PaddingValues(vertical = 16.dp), // Padding top/bottom of list
+            verticalArrangement = Arrangement.Center
         ) {
             // --- Referendum Question ---
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .fillMaxSize()
                         .padding(bottom = 24.dp), // Space below question
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
+                    //Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = referendumQuestion,
                         style = MaterialTheme.typography.headlineSmall, // Style for the question
-                        textAlign = TextAlign.Center,
+                        textAlign = TextAlign.Justify,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Divider() // Separator line
+                    //Divider() // Separator line
                 }
             }
 
@@ -153,7 +160,7 @@ fun ReferendumAnswerItem(
             if (isSelected) {
                 Text(
                     text = "X",
-                    fontSize = 22.sp, // Adjust size as needed
+                    fontSize = 28.sp, // Adjust size as needed
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
