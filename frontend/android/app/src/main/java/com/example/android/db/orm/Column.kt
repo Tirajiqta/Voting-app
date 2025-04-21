@@ -1,6 +1,6 @@
 package com.example.android.db.orm
 
-@Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.PROPERTY)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class Column(
     val name: String,

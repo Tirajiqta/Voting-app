@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class PermissionDTO(
     val id: Long? = null,
-    val name: String
+    val name: String?
 )

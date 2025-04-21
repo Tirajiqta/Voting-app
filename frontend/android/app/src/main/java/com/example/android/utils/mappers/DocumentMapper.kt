@@ -1,6 +1,7 @@
 package com.example.android.utils.mappers
 
 import com.example.android.dto.response.DocumentDTO
+import com.example.android.dto.response.UserDTO
 import com.example.android.entity.DocumentEntity
 
 object DocumentMapper {
@@ -26,6 +27,5 @@ object DocumentMapper {
         gender = this.gender,
         dateOfBirth = this.dateOfBirth,
         permanentAddress = this.permanentAddress,
-        user = null // You can fetch & assign the UserDTO if needed later
     )
 }

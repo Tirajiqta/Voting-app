@@ -15,13 +15,13 @@ object UserMapper {
 
     fun UserDTO.toEntity(): UserEntity = UserEntity(
         id = this.id,
-        name = this.name,
-        email = this.email,
-        phone = this.phone,
-        password = this.password,
-        currentAddress = this.currentAddress,
-        locationId = this.locationId.id,
-        egn = this.egn
+        name = this.name?:"",
+        email = this.email?:"",
+        phone = this.phone?:"",
+        password = this.password?:"",
+        currentAddress = this.currentAddress?:"",
+        locationId = this.locationId?.id ?: 1L,
+        egn = this.egn?:""
     )
 
     fun UserEntity.toDto(
@@ -43,6 +43,7 @@ object UserMapper {
             region = regionEntity
         ),
         document = document?.toDto(),
+
         roles = roles[0].toDto()
     )
 }

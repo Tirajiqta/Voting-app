@@ -7,7 +7,7 @@ object PermissionMapper {
 
     fun PermissionDTO.toEntity(): PermissionEntity = PermissionEntity(
         id = this.id,
-        name = this.name
+        name = this.name?:""
     )
 
     fun PermissionEntity.toDto(): PermissionDTO = PermissionDTO(

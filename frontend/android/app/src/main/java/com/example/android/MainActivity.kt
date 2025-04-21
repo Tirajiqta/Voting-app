@@ -1,5 +1,6 @@
 package com.example.android
 
+import ElectionChoiceScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,7 +18,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.android.dummymodel.UserProfile
-import com.example.android.ui.theme.screens.ElectionChoiceScreen
 import com.example.android.ui.theme.screens.HomeScreen
 import com.example.android.ui.theme.screens.LoginScreen
 import com.example.android.ui.theme.screens.ProfileScreen
@@ -72,8 +72,7 @@ fun AppNavigator() {
             )
         }
         composable ("choose_election"){
-            ElectionChoiceScreen(
-                activeElections = listOf("Presidential Election", "Local Government Election"),
+            ElectionChoiceScreen (
                 onNavigateToVote = { electionName ->
                     navController.navigate("vote/$electionName")
                 }

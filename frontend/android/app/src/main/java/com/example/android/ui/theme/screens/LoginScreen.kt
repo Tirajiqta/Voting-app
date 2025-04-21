@@ -1,6 +1,7 @@
 package com.example.android.ui.theme.screens
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
@@ -15,17 +16,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.android.dto.response.DocumentDTO
-import com.example.android.dto.response.LocationResponseDTO
-import com.example.android.dto.response.MunicipalityResponseDTO
-import com.example.android.dto.response.RegionResponseDTO
-import com.example.android.dto.response.RoleDTO
-import com.example.android.dto.response.UserDTO
 import com.example.compose.AppTheme
-import java.time.LocalDate
 import com.example.android.dto.request.LoginRequest
 import com.example.android.dto.response.LoginResponse
 import com.example.android.api.VotingApi
+import com.example.android.dto.response.UserProfileDetailsDTO
+import com.example.android.utils.CurrentUserHolder
+import com.example.android.utils.InMemoryTokenHolder
 
 import kotlinx.coroutines.launch
 import java.io.IOException
@@ -40,6 +37,24 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
+    fun fetchAndStoreUserProfile() {
+
+        Log.d("AuthViewModel", "Attempting to fetch user profile details...")
+
+        VotingApi.getUserProfileDetails(object : VotingApi.Callback<UserProfileDetailsDTO> {
+            override fun onSuccess(response: UserProfileDetailsDTO) {
+                Log.i("AuthViewModel", "Successfully fetched user profile details.")
+                // 4. Store profile details globally
+                CurrentUserHolder.updateProfile(response)
+            }
+
+            override fun onFailure(error: Throwable) {
+                Log.e("AuthViewModel", "Failed to fetch user profile details after login", error)
+                CurrentUserHolder.clear()
+            }
+        })
+    }
+
     fun attemptLogin() {
         if (egn.isBlank() || doc_id.isBlank()) {
             error = "Моля, попълнете ЕГН и номер на документ."
@@ -53,7 +68,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             try {
                 val dto = LoginRequest(egn = egn, documentNumber = doc_id)
                 // Call the suspending function from your VotingApi object
-                val response: LoginResponse = VotingApi.loginSuspending(dto) // <<< USING YOUR API
+                val response: LoginResponse = VotingApi.loginSuspending(dto)
+                InMemoryTokenHolder.saveToken(response.token)
+                fetchAndStoreUserProfile()
 
                 // --- Handle Success ---
                 println("Login successful!")
@@ -83,6 +100,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             }
         }
     }
+
+
+
 
     LaunchedEffect(error) {
         error?.let {
@@ -117,6 +137,10 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
+            colors = TextFieldDefaults.colors( // <-- Use the colors parameter
+                // Set the text color for the enabled state (focused and unfocused)
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black),
             singleLine = true,
             isError = error != null
         )
@@ -129,6 +153,10 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
+            colors = TextFieldDefaults.colors( // <-- Use the colors parameter
+                // Set the text color for the enabled state (focused and unfocused)
+                focusedTextColor = Color.Black,
+                unfocusedTextColor = Color.Black),
             singleLine = true,
             isError = error != null
         )

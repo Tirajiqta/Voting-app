@@ -2,6 +2,7 @@ package com.example.android.entity.election
 
 import com.example.android.db.orm.Column
 import com.example.android.db.orm.Table
+import com.example.android.ui.theme.viewmodels.ElectionDisplayItem
 
 @Table(name = "elections")
 data class ElectionEntity(
@@ -27,5 +28,12 @@ data class ElectionEntity(
     val status: String, // Store enum as String (e.g. "ONGOING")
 
     @Column(name = "created_by")
-    val createdById: Long
-)
+    val createdById: Long,
+){
+    fun toDisplayItem(): ElectionDisplayItem {
+        return ElectionDisplayItem(
+            id = this.id?:1,
+            name = this.electionName
+        )
+    }
+}

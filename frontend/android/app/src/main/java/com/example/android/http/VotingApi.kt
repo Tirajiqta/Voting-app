@@ -9,11 +9,11 @@ import com.example.android.dto.response.survey.SurveyOptionDTO
 import com.example.android.dto.response.survey.SurveyQuestionDTO
 import com.example.android.dto.response.survey.SurveyResponseDTO
 import com.example.android.dto.response.survey.SurveyResultsDTO
-//added
+import com.example.android.utils.InMemoryTokenHolder
 
 object VotingApi {
 
-    private const val BASE_URL = "https://desktop-4pa1111.tail83a47.ts.net/api"
+    private const val BASE_URL = "https://desktop-4pa1111.tail83a47.ts.net:8443/api"
 
     fun login(request: LoginRequest, callback: Callback<LoginResponse>) {
         ApiClient.post<LoginRequest, LoginResponse>(
@@ -60,6 +60,7 @@ object VotingApi {
         ApiClient.post<ElectionsRequestDTO, ElectionResponseDTO>(
             "$BASE_URL/elections",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -69,6 +70,7 @@ object VotingApi {
         ApiClient.post<ElectionsRequestDTO, ElectionResponseDTO>(
             "$BASE_URL/elections/$id",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -77,6 +79,7 @@ object VotingApi {
     fun deleteElection(id: Long, callback: Callback<Unit>) {
         ApiClient.get<Unit>(
             "$BASE_URL/elections/$id",
+            headers = getAuthHeaders(),
             onSuccess = { callback.onSuccess(Unit) },
             onFailure = callback::onFailure
         )
@@ -85,6 +88,7 @@ object VotingApi {
     fun getElection(id: Long, callback: Callback<ElectionResponseDTO>) {
         ApiClient.get<ElectionResponseDTO>(
             "$BASE_URL/elections/$id",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -98,6 +102,7 @@ object VotingApi {
         }
         ApiClient.get<PagedResponseDTO<ElectionResponseDTO>>(
             url,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -107,6 +112,7 @@ object VotingApi {
         ApiClient.post<CandidateRequestDTO, CandidateResponseDTO>(
             "$BASE_URL/elections/$electionId/candidates",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -116,16 +122,39 @@ object VotingApi {
         ApiClient.post<CandidateRequestDTO, CandidateResponseDTO>(
             "$BASE_URL/candidates/$id",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
     }
 
     fun deleteCandidate(id: Long, callback: Callback<Unit>) {
+
         ApiClient.get<Unit>(
             "$BASE_URL/candidates/$id",
+            headers = getAuthHeaders(),
             onSuccess = { callback.onSuccess(Unit) },
             onFailure = callback::onFailure
+        )
+    }
+
+    fun getUserProfileDetails(callback: Callback<UserProfileDetailsDTO>) {
+        // Construct the specific URL for the endpoint
+        val url = "$BASE_URL/users/me"
+        // Make the GET request using the generic ApiClient
+        ApiClient.get<UserProfileDetailsDTO>(
+            url = url,
+            headers = getAuthHeaders(),
+            onSuccess = { userProfileDetails ->
+                // Successfully received and parsed the UserProfileDetailsDTO
+                callback.onSuccess(userProfileDetails)
+            },
+            onFailure = { error ->
+                // An error occurred (network, server error, parsing error, etc.)
+                callback.onFailure(error)
+            }
+            // Assumes ApiClient.get() automatically adds necessary headers
+            // like Authorization Bearer token from a saved state.
         )
     }
 
@@ -133,6 +162,7 @@ object VotingApi {
         ApiClient.post<VoteRequestDTO, VoteResponseDTO>(
             "$BASE_URL/votes",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -141,6 +171,7 @@ object VotingApi {
     fun getElectionResults(electionId: Long, callback: Callback<ElectionResultsDTO>) {
         ApiClient.get<ElectionResultsDTO>(
             "$BASE_URL/elections/$electionId/results",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -149,6 +180,7 @@ object VotingApi {
     fun listRegions(callback: Callback<List<RegionResponseDTO>>) {
         ApiClient.get(
             "$BASE_URL/position/regions",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -157,6 +189,7 @@ object VotingApi {
     fun getRegion(id: Long, callback: Callback<RegionResponseDTO>) {
         ApiClient.get(
             "$BASE_URL/position/regions/$id",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -165,6 +198,7 @@ object VotingApi {
     fun listMunicipalities(callback: Callback<List<MunicipalityResponseDTO>>) {
         ApiClient.get(
             "$BASE_URL/position/municipalities",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -173,6 +207,7 @@ object VotingApi {
     fun getMunicipality(id: Long, callback: Callback<MunicipalityResponseDTO>) {
         ApiClient.get(
             "$BASE_URL/position/municipalities/$id",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -181,6 +216,7 @@ object VotingApi {
     fun listLocations(callback: Callback<List<LocationResponseDTO>>) {
         ApiClient.get(
             "$BASE_URL/position/locations",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -189,6 +225,7 @@ object VotingApi {
     fun getLocation(id: Long, callback: Callback<LocationResponseDTO>) {
         ApiClient.get(
             "$BASE_URL/position/locations/$id",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -197,6 +234,7 @@ object VotingApi {
     fun listLocationRegions(callback: Callback<List<LocationRegionResponseDTO>>) {
         ApiClient.get(
             "$BASE_URL/position/location-regions",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -205,6 +243,7 @@ object VotingApi {
     fun getLocationRegion(id: Long, callback: Callback<LocationRegionResponseDTO>) {
         ApiClient.get(
             "$BASE_URL/position/location-regions/$id",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -214,6 +253,7 @@ object VotingApi {
         ApiClient.post<ReferendumRequestDTO, ReferendumResponseDTO>(
             "$BASE_URL/referendums",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -223,6 +263,7 @@ object VotingApi {
         ApiClient.post<ReferendumRequestDTO, ReferendumResponseDTO>(
             "$BASE_URL/referendums/$id",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -231,6 +272,7 @@ object VotingApi {
     fun deleteReferendum(id: Long, callback: Callback<Unit>) {
         ApiClient.get<Unit>(
             "$BASE_URL/referendums/$id",
+            headers = getAuthHeaders(),
             onSuccess = { callback.onSuccess(Unit) },
             onFailure = callback::onFailure
         )
@@ -239,6 +281,7 @@ object VotingApi {
     fun getReferendum(id: Long, callback: Callback<ReferendumResponseDTO>) {
         ApiClient.get<ReferendumResponseDTO>(
             "$BASE_URL/referendums/$id",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -251,6 +294,7 @@ object VotingApi {
         }
         ApiClient.get<PagedResponseDTO<ReferendumResponseDTO>>(
             url,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -260,6 +304,7 @@ object VotingApi {
         ApiClient.post<ReferendumVoteRequestDTO, ReferendumVoteResponseDTO>(
             "$BASE_URL/referendums/$id/votes",
             request,
+            headers = getAuthHeaders(),
             onSuccess = { callback.onSuccess(it) },
             onFailure = { callback.onFailure(it) }
         )
@@ -268,6 +313,7 @@ object VotingApi {
     fun getReferendumResults(id: Long, callback: Callback<ReferendumResultsDTO>) {
         ApiClient.get<ReferendumResultsDTO>(
             "$BASE_URL/referendums/$id/results",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -278,6 +324,7 @@ object VotingApi {
         ApiClient.post<SurveyRequestDTO, SurveyDTO>(
             "$BASE_URL/surveys/$id",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -286,6 +333,7 @@ object VotingApi {
     fun deleteSurvey(id: Long, callback: Callback<Unit>) {
         ApiClient.get<Unit>(
             "$BASE_URL/surveys/$id",
+            headers = getAuthHeaders(),
             onSuccess = { callback.onSuccess(Unit) },
             onFailure = callback::onFailure
         )
@@ -294,6 +342,7 @@ object VotingApi {
     fun getSurvey(id: Long, callback: Callback<SurveyDTO>) {
         ApiClient.get<SurveyDTO>(
             "$BASE_URL/surveys/$id",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -306,6 +355,7 @@ object VotingApi {
         }
         ApiClient.get<PagedResponseDTO<SurveyDTO>>(
             url,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -315,6 +365,7 @@ object VotingApi {
         ApiClient.post<SurveyQuestionRequestDTO, SurveyQuestionDTO>(
             "$BASE_URL/surveys/$surveyId/questions",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -324,6 +375,7 @@ object VotingApi {
         ApiClient.post<SurveyQuestionRequestDTO, SurveyQuestionDTO>(
             "$BASE_URL/surveys/$surveyId/questions/$questionId",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -332,6 +384,7 @@ object VotingApi {
     fun deleteSurveyQuestion(surveyId: Long, questionId: Long, callback: Callback<Unit>) {
         ApiClient.get<Unit>(
             "$BASE_URL/surveys/$surveyId/questions/$questionId",
+            headers = getAuthHeaders(),
             onSuccess = { callback.onSuccess(Unit) },
             onFailure = callback::onFailure
         )
@@ -341,6 +394,7 @@ object VotingApi {
         ApiClient.post<SurveyOptionRequestDTO, SurveyOptionDTO>(
             "$BASE_URL/surveys/$surveyId/questions/$questionId/options",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -350,6 +404,7 @@ object VotingApi {
         ApiClient.post<SurveyOptionRequestDTO, SurveyOptionDTO>(
             "$BASE_URL/surveys/$surveyId/questions/$questionId/options/$optionId",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -358,6 +413,7 @@ object VotingApi {
     fun deleteSurveyOption(surveyId: Long, questionId: Long, optionId: Long, callback: Callback<Unit>) {
         ApiClient.get<Unit>(
             "$BASE_URL/surveys/$surveyId/questions/$questionId/options/$optionId",
+            headers = getAuthHeaders(),
             onSuccess = { callback.onSuccess(Unit) },
             onFailure = callback::onFailure
         )
@@ -367,6 +423,7 @@ object VotingApi {
         ApiClient.post<SurveyResponseRequestDTO, SurveyResponseDTO>(
             "$BASE_URL/surveys/$surveyId/responses",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -375,6 +432,7 @@ object VotingApi {
     fun getSurveyResults(surveyId: Long, callback: Callback<SurveyResultsDTO>) {
         ApiClient.get<SurveyResultsDTO>(
             "$BASE_URL/surveys/$surveyId/results",
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -383,6 +441,7 @@ object VotingApi {
         ApiClient.post<SurveyRequestDTO, SurveyDTO>(
             "$BASE_URL/surveys",
             request,
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -391,7 +450,7 @@ object VotingApi {
     fun getUserProfile(token: String, callback: Callback<UserDTO>) {
         ApiClient.get<UserDTO>(
             "$BASE_URL/users/profile",
-            headers = mapOf("Authorization" to "Bearer $token"),
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -401,7 +460,7 @@ object VotingApi {
         ApiClient.post<UserDTO, UserDTO>(
             "$BASE_URL/users/profile",
             request,
-            headers = mapOf("Authorization" to "Bearer $token"),
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -410,7 +469,7 @@ object VotingApi {
     fun getUserDocument(token: String, callback: Callback<DocumentResponseDTO>) {
         ApiClient.get<DocumentResponseDTO>(
             "$BASE_URL/users/profile/document",
-            headers = mapOf("Authorization" to "Bearer $token"),
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
@@ -420,10 +479,24 @@ object VotingApi {
         ApiClient.post<DocumentRequestDTO, DocumentResponseDTO>(
             "$BASE_URL/users/profile/document",
             request,
-            headers = mapOf("Authorization" to "Bearer $token"),
+            headers = getAuthHeaders(),
             onSuccess = callback::onSuccess,
             onFailure = callback::onFailure
         )
+    }
+
+    private fun getAuthHeaders(): Map<String, String>{
+        val token = InMemoryTokenHolder.getToken()
+
+        val requestHeaders: Map<String, String>
+        if (!token.isNullOrBlank()) {
+            // If token exists, create the Authorization header
+            requestHeaders = mapOf("Authorization" to "Bearer $token")
+        } else {
+            // If no token, send empty headers. The backend should return 401 Unauthorized.
+            requestHeaders = emptyMap()
+        }
+        return requestHeaders
     }
     interface Callback<T> {
         fun onSuccess(response: T)
