@@ -23,4 +23,8 @@ public class LocationEntity {
     @OneToOne
     @JoinColumn(name = "municipality_id", referencedColumnName = "id")
     private MunicipalityEntity municipality;
+
+    public LocationEntity(Long id) {
+        this.id = id;
+    }
 }

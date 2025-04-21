@@ -26,4 +26,8 @@ public class PartyVoteEntity {
 
     @Column(name = "vote_count")
     private int voteCount;
+
+    public PartyVoteEntity(Long id) {
+        this.id = id;
+    }
 }

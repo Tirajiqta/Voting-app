@@ -8,12 +8,17 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface CandidateMapper {
 
-    // Map CandidateEntity to CandidateDTO by extracting election.id.
+    // Map CandidateEntity -> CandidateDTO
     @Mapping(source = "election.id", target = "electionId")
     CandidateDTO toDto(CandidateEntity entity);
 
-    // Map CandidateDTO to CandidateEntity by instantiating a minimal ElectionEntity using electionId.
-    @Mapping(source = "electionId", target = "election",
-            expression = "java(new com.tu.votingapp.entities.elections.ElectionEntity(electionId))")
+    // Map CandidateDTO -> CandidateEntity
+    @Mapping(target = "id", ignore = true) // Usually ignore ID
+    @Mapping(target = "election",
+            expression = "java(dto.getElectionId() == null ? null : new com.tu.votingapp.entities.elections.ElectionEntity(dto.getElectionId()))")
+    // FIX: Ignore party, service sets it
+    @Mapping(target = "party", ignore = true)
+    // Add ignore for votesCount if it shouldn't be mapped from DTO
+    @Mapping(target = "votesCount", ignore = true)
     CandidateEntity toEntity(CandidateDTO dto);
 }

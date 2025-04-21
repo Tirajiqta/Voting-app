@@ -25,4 +25,8 @@ public class ReferendumOptionEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "referendum_id")
     private ReferendumEntity referendum;
+
+    public ReferendumOptionEntity(Long id) {
+        this.id = id;
+    }
 }

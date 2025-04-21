@@ -16,4 +16,8 @@ public class PermissionEntity {
 
     @Column(nullable = false, unique = true)
     private String name;
+
+    public PermissionEntity(Long id) {
+        this.id = id;
+    }
 }

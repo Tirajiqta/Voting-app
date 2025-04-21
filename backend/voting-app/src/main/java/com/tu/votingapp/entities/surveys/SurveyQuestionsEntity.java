@@ -28,4 +28,8 @@ public class SurveyQuestionsEntity {
 
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SurveyOptionEntity> options = new ArrayList<>();
+
+    public SurveyQuestionsEntity(Long id) {
+        this.id = id;
+    }
 }

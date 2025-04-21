@@ -40,4 +40,8 @@ public class SurveyResponseEntity {
     /** When they submitted their answer */
     @Column(name = "responded_at", nullable = false)
     private LocalDateTime respondedAt;
+
+    public SurveyResponseEntity(Long id) {
+        this.id = id;
+    }
 }

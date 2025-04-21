@@ -48,4 +48,8 @@ public class ReferendumVoteEntity {
      */
     @Column(name = "vote_timestamp", nullable = false)
     private LocalDateTime voteTimestamp;
+
+    public ReferendumVoteEntity(Long id) {
+        this.id = id;
+    }
 }

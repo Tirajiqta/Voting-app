@@ -30,6 +30,14 @@ public class PartyEntity {
     @Column(name = "leader_name")
     private String leaderName;
 
+    @ManyToOne
+    @JoinColumn(name = "election_id")
+    private ElectionEntity election;
+
     @OneToMany(mappedBy = "party", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CandidateEntity> candidates = new ArrayList<>();
+
+    public PartyEntity(Long id) {
+        this.id = id;
+    }
 }

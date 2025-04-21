@@ -51,4 +51,8 @@ public class ElectionEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private UserEntity createdBy;
+
+    public ElectionEntity(Long id) {
+        this.id = id;
+    }
 }

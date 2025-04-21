@@ -11,11 +11,11 @@ import org.mapstruct.Mapping;
 public interface UserMapper {
 
     // Map UserEntity -> UserDTO using the LocationMapper for the location mapping.
-    @Mapping(source = "regionId", target = "location")
+    @Mapping(source = "regionId", target = "locationId")
     UserDTO toDto(UserEntity user);
 
     // Map UserDTO -> UserEntity.
     // Here, the nested LocationDTO is mapped back to a LocationEntity via the LocationMapper.
-    @Mapping(source = "location", target = "regionId")
+    @Mapping(source = "locationId", target = "regionId")
     UserEntity toEntity(UserDTO userDto);
 }

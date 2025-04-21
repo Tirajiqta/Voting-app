@@ -13,7 +13,10 @@ public interface ReferendumOptionMapper {
     ReferendumOptionDTO toDto(ReferendumOptionEntity entity);
 
     // Map DTO to entity using an expression to create a minimal ReferendumEntity.
-    @Mapping(source = "referendumId", target = "referendum",
-            expression = "java(new com.tu.votingapp.entities.referendum.ReferendumEntity(referendumId))")
+    @Mapping(target = "referendum", // Target field only
+            // Use expression to create the ReferendumEntity, accessing referendumId from the dto
+            // Ensure ReferendumEntity has a public ReferendumEntity(Long id) constructor
+            // Added null check for robustness
+            expression = "java(dto.getReferendumId() == null ? null : new com.tu.votingapp.entities.referendum.ReferendumEntity(dto.getReferendumId()))")
     ReferendumOptionEntity toEntity(ReferendumOptionDTO dto);
 }

@@ -1,30 +1,31 @@
 package com.tu.votingapp.services.impl.elections;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tu.votingapp.dto.general.elections.VoteDTO;
 import com.tu.votingapp.dto.request.elections.VoteRequestDTO;
-import com.tu.votingapp.dto.response.elections.VoteResponseDTO;
+import com.tu.votingapp.entities.UserEntity;
 import com.tu.votingapp.entities.elections.CandidateEntity;
 import com.tu.votingapp.entities.elections.ElectionEntity;
 import com.tu.votingapp.entities.elections.PartyEntity;
-import com.tu.votingapp.entities.elections.PartyVoteEntity;
 import com.tu.votingapp.entities.elections.VoteEntity;
 import com.tu.votingapp.enums.ElectionStatus;
+import com.tu.votingapp.repositories.interfaces.UserRepository;
 import com.tu.votingapp.repositories.interfaces.elections.CandidateRepository;
 import com.tu.votingapp.repositories.interfaces.elections.ElectionRepository;
 import com.tu.votingapp.repositories.interfaces.elections.PartyRepository;
 import com.tu.votingapp.repositories.interfaces.elections.PartyVoteRepository;
 import com.tu.votingapp.repositories.interfaces.elections.VoteRepository;
 import com.tu.votingapp.services.interfaces.elections.VoteService;
+import com.tu.votingapp.utils.mappers.election.VoteMapper;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
-import java.util.logging.Level;
+import java.time.LocalDateTime;
 import java.util.logging.Logger;
 
 @Service
@@ -37,85 +38,93 @@ public class VoteServiceImpl implements VoteService {
     private final PartyRepository partyRepository;
     private final PartyVoteRepository partyVoteRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
     private final Logger logger = Logger.getLogger(VoteServiceImpl.class.getName());
+    private final UserRepository userRepository;
+    private final VoteMapper voteMapper;
 
     @Override
     @Transactional
-    public VoteResponseDTO castVote(VoteRequestDTO request) {
-        Long electionId = request.getElectionId();
-        Long userId = getCurrentUserId();
-        logger.info(() -> "Casting vote in electionId=" + electionId + ", userId=" + userId);
+    public VoteDTO castVote(VoteRequestDTO decryptedVote) {
+        Long authenticatedUserId = getCurrentUserId();
+        logger.info(() -> "Processing vote cast request for user ID: " + authenticatedUserId + " in election ID: " + decryptedVote.getElectionId());
 
-        // Validate election
-        ElectionEntity election = electionRepository.findById(electionId)
-                .orElseThrow(() -> new RuntimeException("Election not found: " + electionId));
-        if (election.getStatus() != ElectionStatus.ONGOING) {
-            logger.warning(() -> "Attempt to vote in non-ongoing electionId=" + electionId);
-            throw new IllegalStateException("Election is not open for voting");
+        // --- Validation ---
+        // 1. Validate XOR condition for candidate/party
+        boolean isCandidateVote = decryptedVote.getCandidateId() != null;
+        boolean isPartyVote = decryptedVote.getPartyId() != null;
+        if (isCandidateVote == isPartyVote) { // XOR check
+            throw new IllegalArgumentException("Invalid vote: Must vote for exactly one of candidate or party.");
+        }
+        if (decryptedVote.getElectionId() == null) {
+            throw new IllegalArgumentException("Invalid vote: Election ID is required.");
         }
 
-        // One vote per user
-        if (voteRepository.existsByUserIdAndElection_Id(userId, electionId)) {
-            logger.warning(() -> "Duplicate vote attempt userId=" + userId + " electionId=" + electionId);
-            throw new IllegalStateException("User has already voted in this election");
+        // 2. Fetch entities
+        UserEntity user = userRepository.findById(authenticatedUserId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + authenticatedUserId));
+        ElectionEntity election = electionRepository.findById(decryptedVote.getElectionId())
+                .orElseThrow(() -> new EntityNotFoundException("Election not found: " + decryptedVote.getElectionId()));
+
+        // 3. Check Election Status and Dates (Crucial!)
+        // Example - add more detailed checks based on your ElectionStatus enum
+        if (election.getStatus() != ElectionStatus.OPEN) {
+            throw new IllegalStateException("Cannot cast vote: Election is not active. Status: " + election.getStatus());
+        }
+        LocalDateTime now = LocalDateTime.now();
+        // Assuming your ElectionEntity uses java.time.LocalDate now
+        if (now.toLocalDate().isBefore(election.getStartDate().toLocalDate()) || now.toLocalDate().isAfter(election.getEndDate().toLocalDate())) {
+            throw new IllegalStateException("Cannot cast vote: Election is not within the voting period.");
         }
 
-        // Prepare vote record
-        VoteEntity vote = new VoteEntity();
-        vote.setUserId(userId);
-        vote.setElection(election);
-        vote.setVoteTimestamp(new Date(System.currentTimeMillis()));
 
-        // Tally
-        if (request.getCandidateId() != null) {
-            Long candidateId = request.getCandidateId();
-            logger.fine(() -> "Tallying candidate vote for candidateId=" + candidateId);
-            CandidateEntity cand = candidateRepository.findById(candidateId)
-                    .orElseThrow(() -> new RuntimeException("Candidate not found: " + candidateId));
-            if (!cand.getElection().getId().equals(electionId)) {
-                logger.warning(() -> "Candidate does not belong to election: candidateId=" + candidateId);
-                throw new IllegalArgumentException("Candidate does not belong to election");
+        // 4. Check if user already voted in this election (uses unique constraint)
+        // The unique constraint on VoteEntity (user_id, election_id) will enforce this mostly,
+        // but checking beforehand provides a clearer error.
+        if (voteRepository.existsByUserAndElection(user, election)) { // Assumes existsByUserAndElection method in VoteRepository
+            throw new DataIntegrityViolationException("User " + authenticatedUserId + " has already voted in election " + decryptedVote.getElectionId());
+        }
+
+        // 5. Fetch Candidate/Party if applicable and validate they belong to the election
+        CandidateEntity candidate = null;
+        PartyEntity party = null;
+
+        if (isCandidateVote) {
+            candidate = candidateRepository.findById(decryptedVote.getCandidateId())
+                    .orElseThrow(() -> new EntityNotFoundException("Candidate not found: " + decryptedVote.getCandidateId()));
+            // Validate candidate belongs to the election
+            if (!candidate.getElection().getId().equals(election.getId())) {
+                throw new IllegalArgumentException("Invalid vote: Candidate " + candidate.getId() + " does not belong to election " + election.getId());
             }
-            cand.setVotesCount(cand.getVotesCount() + 1);
-            candidateRepository.save(cand);
-        } else {
-            Long partyId = request.getPartyId();
-            logger.fine(() -> "Tallying party vote for partyId=" + partyId);
-            PartyEntity party = partyRepository.findById(partyId)
-                    .orElseThrow(() -> new RuntimeException("Party not found: " + partyId));
-            PartyVoteEntity pv = partyVoteRepository.findByElectionAndParty(election, party)
-                    .orElse(new PartyVoteEntity(null, election, party, 0));
-            pv.setVoteCount(pv.getVoteCount() + 1);
-            partyVoteRepository.save(pv);
+            // Optionally assign the candidate's party if storing party for candidate votes
+            party = candidate.getParty(); // May be null if independent
+        } else { // isPartyVote must be true due to XOR check
+            party = partyRepository.findById(decryptedVote.getPartyId())
+                    .orElseThrow(() -> new EntityNotFoundException("Party not found: " + decryptedVote.getPartyId()));
+            // Optional: Validate party is actually participating in this election
+            // This requires the ManyToMany relationship setup correctly
+            // if (!election.getParties().contains(party)) { // Requires election.getParties() to be loaded
+            //     throw new IllegalArgumentException("Invalid vote: Party " + party.getId() + " is not participating in election " + election.getId());
+            // }
         }
 
-        VoteEntity saved = voteRepository.save(vote);
-        logger.info(() -> "Vote saved id=" + saved.getId());
 
-        // Publish event
-        VoteEvent event = new VoteEvent(
-                electionId,
-                request.getCandidateId(),
-                request.getPartyId(),
-                System.currentTimeMillis()
-        );
+        // --- Create and Save Vote ---
+        VoteEntity voteEntity = new VoteEntity();
+        voteEntity.setUser(user);
+        voteEntity.setElection(election);
+        voteEntity.setCandidate(candidate); // Will be null if party vote
+        voteEntity.setParty(party);         // Will be null if independent candidate vote / party wasn't found for candidate
+        // voteTimestamp is handled by @CreationTimestamp
+
         try {
-            String payload = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("votes", payload);
-            logger.fine(() -> "Published vote event for electionId=" + electionId);
-        } catch (JsonProcessingException e) {
-            logger.log(Level.SEVERE, "Failed to serialize VoteEvent", e);
+            VoteEntity savedVote = voteRepository.save(voteEntity);
+            logger.info(() -> "Vote successfully recorded with ID: " + savedVote.getId());
+            return voteMapper.toDto(savedVote); // Map entity to response DTO
+        } catch (DataIntegrityViolationException e) {
+            // Catch potential unique constraint violation again (race condition defense)
+            logger.warning("Vote casting failed for user " + authenticatedUserId + " in election " + election.getId() + " due to constraint violation (likely duplicate vote).");
+            throw new DataIntegrityViolationException("Vote could not be recorded. You might have already voted.", e);
         }
-
-        return new VoteResponseDTO(
-                saved.getId(),
-                saved.getUserId(),
-                saved.getElection().getId(),
-                request.getCandidateId(),
-                request.getPartyId(),
-                saved.getVoteTimestamp().toLocalDate().atStartOfDay()
-        );
     }
 
     private Long getCurrentUserId() {

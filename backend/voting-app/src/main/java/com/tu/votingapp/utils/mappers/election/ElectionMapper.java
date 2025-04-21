@@ -5,15 +5,19 @@ import com.tu.votingapp.entities.elections.ElectionEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-@Mapper(componentModel = "spring", uses = {CandidateMapper.class})
+@Mapper(componentModel = "spring", uses = {CandidateMapper.class, PartyMapper.class}) // Add PartyMapper if needed for lists
 public interface ElectionMapper {
 
-    // Convert ElectionEntity to ElectionDTO, extracting createdBy.id.
+    // Map ElectionEntity -> ElectionDTO
     @Mapping(source = "createdBy.id", target = "createdById")
-    ElectionDTO toDto(ElectionEntity entity);
+    ElectionDTO toDto(ElectionEntity entity); // MapStruct handles lists via 'uses' if DTO has List<CandidateDTO> etc.
 
-    // Convert ElectionDTO to ElectionEntity, creating a minimal UserEntity from createdById.
-    @Mapping(source = "createdById", target = "createdBy",
-            expression = "java(new com.tu.votingapp.entities.UserEntity(createdById))")
+    // Map ElectionDTO -> ElectionEntity
+    @Mapping(target = "id", ignore = true) // Usually ignore ID
+    @Mapping(target = "createdBy",
+            expression = "java(dto.getCreatedById() == null ? null : new com.tu.votingapp.entities.UserEntity(dto.getCreatedById()))")
+    // FIX: Ignore collections managed by JPA
+    @Mapping(target = "parties", ignore = true)
+    @Mapping(target = "candidates", ignore = true)
     ElectionEntity toEntity(ElectionDTO dto);
 }

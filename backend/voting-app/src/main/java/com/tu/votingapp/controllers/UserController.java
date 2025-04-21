@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.logging.Logger;
 
 /**
@@ -104,5 +106,46 @@ public class UserController {
         }
         logger.fine(() -> "Document retrieved id=" + response.getId() + " for userId=" + userId);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping // Maps to POST /api/users
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO) {
+        logger.info(() -> "Received request to create user with EGN: " + userDTO.getEgn());
+
+        // Basic security check: Don't allow setting ID or roles via this endpoint typically
+        if (userDTO.getId() != null) {
+            logger.warning("Attempt to create user with pre-set ID rejected. EGN: " + userDTO.getEgn());
+            // Consider returning BadRequest or just ignoring the ID
+            userDTO.setId(null);
+        }
+        // Consider clearing roles if they shouldn't be set during public registration
+        // userDTO.setRoles(null);
+
+
+        try {
+            UserDTO createdUser = userService.create(userDTO);
+
+            // Build the URI for the 'Location' header (good REST practice)
+            URI location = ServletUriComponentsBuilder
+                    .fromCurrentRequest() // Gets base path /api/users
+                    .path("/{id}")        // Appends /{id}
+                    .buildAndExpand(createdUser.getId()) // Replaces {id} with the actual new ID
+                    .toUri();
+
+            logger.info(() -> "User created successfully. ID: " + createdUser.getId() + ", Location: " + location);
+
+            // Return 201 Created status, Location header, and the created user DTO (without password)
+            return ResponseEntity.created(location).body(createdUser);
+
+        } catch (IllegalArgumentException e) {
+            // Catch exceptions thrown by the service (like duplicate user)
+            logger.warning("User creation failed: " + e.getMessage());
+            // Return 400 Bad Request or 409 Conflict depending on the error
+            return ResponseEntity.badRequest().body(null); // Or return an ErrorResponseDTO
+        } catch (Exception e) {
+            // Catch unexpected errors
+            logger.severe("Unexpected error during user creation: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Or ErrorResponseDTO
+        }
     }
 }
