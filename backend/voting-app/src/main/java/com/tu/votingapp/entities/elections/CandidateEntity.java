@@ -35,4 +35,12 @@ public class CandidateEntity {
 
     @Column(name = "position")
     private String position;
+
+    @ManyToOne
+    @JoinColumn(name = "party_id")
+    private PartyEntity party;
+
+    public CandidateEntity(Long id) {
+        this.id = id;
+    }
 }

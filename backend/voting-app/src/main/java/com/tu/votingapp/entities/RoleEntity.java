@@ -27,4 +27,8 @@ public class RoleEntity {
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     private List<PermissionEntity> permissions = new ArrayList<>();
+
+    public RoleEntity(Long id) {
+        this.id = id;
+    }
 }

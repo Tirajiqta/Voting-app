@@ -44,4 +44,8 @@ public class SurveyEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private UserEntity createdBy;
+
+    public SurveyEntity(Long id) {
+        this.id = id;
+    }
 }

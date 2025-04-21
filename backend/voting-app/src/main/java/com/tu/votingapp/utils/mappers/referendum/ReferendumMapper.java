@@ -13,7 +13,10 @@ public interface ReferendumMapper {
     ReferendumDTO toDto(ReferendumEntity entity);
 
     // Map DTO to entity: create a minimal UserEntity using the createdById.
-    @Mapping(source = "createdById", target = "createdBy",
-            expression = "java(new com.tu.votingapp.entities.UserEntity(createdById))")
+    @Mapping(target = "createdBy", // Target field only
+            // Use expression to create the UserEntity, accessing createdById from the dto
+            // Ensure UserEntity has a public UserEntity(Long id) constructor
+            // Added null check for robustness
+            expression = "java(dto.getCreatedById() == null ? null : new com.tu.votingapp.entities.UserEntity(dto.getCreatedById()))")
     ReferendumEntity toEntity(ReferendumDTO dto);
 }

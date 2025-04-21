@@ -25,7 +25,11 @@ public class MunicipalityEntity {
     @Column(name = "population")
     private Long population;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) // Changed from @OneToOne to @ManyToOne
     @JoinColumn(name = "region_id", referencedColumnName = "id")
     private RegionEntity region;
+
+    public MunicipalityEntity(Long id) {
+        this.id = id;
+    }
 }

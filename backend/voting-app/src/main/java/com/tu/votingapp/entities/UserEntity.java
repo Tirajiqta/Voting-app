@@ -40,7 +40,7 @@ public class UserEntity {
     private String currentAddress;
 
     @NonNull
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "location_id", referencedColumnName = "id", nullable = false)
     private LocationEntity regionId;
 
@@ -48,8 +48,17 @@ public class UserEntity {
     @Column(name = "egn", nullable = false)
     private String egn;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id", referencedColumnName = "id", nullable = false, unique = true)
+    @OneToOne(
+            cascade = CascadeType.ALL,    // Good: Saves/updates/deletes Document when User is saved/updated/deleted
+            fetch = FetchType.EAGER,       // Good: Loads Document only when explicitly accessed
+            optional = false              // Implied by nullable=false on @JoinColumn, but explicit is fine
+    )
+    @JoinColumn(
+            name = "document_id",         // Correct: FK column in the 'user' table
+            referencedColumnName = "id",  // Correct: PK column in the 'documents' table
+            nullable = false,             // Correct: Enforces the NOT NULL constraint at JPA/DDL level
+            unique = true                 // Correct: Enforces the 1-to-1 relationship at DB level (one user per document_id)
+    )
     private DocumentEntity document;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -59,5 +68,9 @@ public class UserEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private List<RoleEntity> roles = new ArrayList<>();
+
+    public UserEntity(Long id) {
+        this.id = id;
+    }
 
 }

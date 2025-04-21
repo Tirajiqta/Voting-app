@@ -23,4 +23,8 @@ public class SurveyOptionEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     private SurveyQuestionsEntity question;
+
+    public SurveyOptionEntity(Long id) {
+        this.id = id;
+    }
 }

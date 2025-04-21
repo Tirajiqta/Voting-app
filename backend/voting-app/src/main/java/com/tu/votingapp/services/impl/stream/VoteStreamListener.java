@@ -15,7 +15,7 @@ public class VoteStreamListener {
         this.aggregator = aggregator;
     }
 
-    @KafkaListener(topics = "votes", groupId = "voting-analytics-group")
+//    @KafkaListener(topics = "votes", groupId = "voting-analytics-group")
     public void onVoteEvent(String message) {
         logger.info(() -> "Received vote event message, length=" + message.length());
         try {

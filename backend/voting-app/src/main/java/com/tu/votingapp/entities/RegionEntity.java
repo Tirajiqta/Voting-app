@@ -20,4 +20,8 @@ public class RegionEntity {
 
     @Column(name = "population")
     private Integer population;
+
+    public RegionEntity(Long id) {
+        this.id = id;
+    }
 }

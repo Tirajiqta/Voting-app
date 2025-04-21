@@ -50,4 +50,7 @@ public class DocumentEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
 
+    public DocumentEntity(Long id) {
+        this.id = id;
+    }
 }

@@ -21,8 +21,12 @@ public class LocationRegionEntity {
     @Column(name = "name")
     private String name;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) // Changed from @OneToOne to @ManyToOne
     @JoinColumn(name = "location_id", referencedColumnName = "id")
     private LocationEntity location;
+
+    public LocationRegionEntity(Long id) {
+        this.id = id;
+    }
 }
 

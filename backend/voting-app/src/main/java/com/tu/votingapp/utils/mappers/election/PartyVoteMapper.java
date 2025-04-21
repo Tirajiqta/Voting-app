@@ -8,15 +8,20 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PartyVoteMapper {
 
-    // Map PartyVoteEntity to PartyVoteDTO.
+    // Map PartyVoteEntity -> PartyVoteDTO
     @Mapping(source = "election.id", target = "electionId")
     @Mapping(source = "party.id", target = "partyId")
+    // Add if PartyVoteEntity has a User voter field
+    // @Mapping(source = "user.id", target = "userId")
     PartyVoteDTO toDto(PartyVoteEntity entity);
 
-    // Map PartyVoteDTO to PartyVoteEntity.
-    @Mapping(source = "electionId", target = "election",
-            expression = "java(new com.tu.votingapp.entities.elections.ElectionEntity(electionId))")
-    @Mapping(source = "partyId", target = "party",
-            expression = "java(new com.tu.votingapp.entities.elections.PartyEntity(partyId))")
+    // Map PartyVoteDTO -> PartyVoteEntity
+    @Mapping(target = "id", ignore = true) // Usually ignore ID
+    @Mapping(target = "election",
+            expression = "java(dto.getElectionId() == null ? null : new com.tu.votingapp.entities.elections.ElectionEntity(dto.getElectionId()))")
+    @Mapping(target = "party",
+            expression = "java(dto.getPartyId() == null ? null : new com.tu.votingapp.entities.elections.PartyEntity(dto.getPartyId()))")
+    // Add if PartyVoteEntity has a User voter field - ignore it, service sets it
+    // @Mapping(target = "user", ignore = true)
     PartyVoteEntity toEntity(PartyVoteDTO dto);
 }

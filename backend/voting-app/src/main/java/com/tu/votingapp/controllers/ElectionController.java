@@ -1,5 +1,8 @@
 package com.tu.votingapp.controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tu.votingapp.dto.general.elections.VoteDTO;
 import com.tu.votingapp.dto.request.elections.CandidateRequestDTO;
 import com.tu.votingapp.dto.request.elections.ElectionsRequestDTO;
 import com.tu.votingapp.dto.request.elections.VoteRequestDTO;
@@ -14,11 +17,19 @@ import com.tu.votingapp.services.interfaces.elections.CandidateService;
 import com.tu.votingapp.services.interfaces.elections.ElectionService;
 import com.tu.votingapp.services.interfaces.elections.VoteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.logging.Logger;
 
 @RestController
@@ -34,7 +45,7 @@ public class ElectionController {
 
     // Election endpoints
 
-    @PostMapping("/elections")
+    @PostMapping("/elections/create")
     public ResponseEntity<ElectionResponseDTO> createElection(
             @Valid @RequestBody ElectionsRequestDTO request) {
         logger.info(() -> "Creating election: " + request.getElectionName());
@@ -43,7 +54,7 @@ public class ElectionController {
         return ResponseEntity.ok(response);
     }
 
-    @PutMapping("/elections/{id}")
+    @PutMapping("/elections/updateById/{id}")
     public ResponseEntity<ElectionResponseDTO> updateElection(
             @PathVariable Long id,
             @Valid @RequestBody ElectionsRequestDTO request) {
@@ -54,7 +65,7 @@ public class ElectionController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/elections/{id}")
+    @DeleteMapping("/elections/deleteById/{id}")
     public ResponseEntity<Void> deleteElection(@PathVariable Long id) {
         logger.info(() -> "Deleting election id=" + id);
         electionService.deleteElection(id);
@@ -62,7 +73,7 @@ public class ElectionController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/elections/{id}")
+    @GetMapping("/elections/getById/{id}")
     public ResponseEntity<ElectionResponseDTO> getElection(@PathVariable Long id) {
         logger.info(() -> "Fetching election id=" + id);
         ElectionResponseDTO response = electionService.getElectionById(id);
@@ -70,7 +81,7 @@ public class ElectionController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/elections")
+    @GetMapping("/elections/list-elections")
     public ResponseEntity<PagedResponseDTO<ElectionResponseDTO>> listElections(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -123,15 +134,21 @@ public class ElectionController {
 
     // Vote endpoints
 
-    @PostMapping("/votes")
-    public ResponseEntity<VoteResponseDTO> castVote(
-            @Valid @RequestBody VoteRequestDTO request) {
-        logger.info(() -> "Casting vote for election=" + request.getElectionId()
-                + ", candidateId=" + request.getCandidateId()
-                + ", partyId=" + request.getPartyId());
-        VoteResponseDTO response = voteService.castVote(request);
-        logger.info(() -> "Vote recorded id=" + response.getId());
-        return ResponseEntity.ok(response);
+    @PostMapping("/votes/castVote")
+    public ResponseEntity<VoteDTO> castVote(@Valid @RequestBody VoteRequestDTO request) {
+        try {
+
+            // Parse the decrypted JSON to extract values (e.g., using Jackson or Gson)
+
+            VoteDTO response = voteService.castVote(request);
+
+            logger.info(() -> "Vote recorded id=" + response.getId());
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            logger.severe("Vote decryption failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
     }
 
     // Results endpoint
@@ -143,5 +160,28 @@ public class ElectionController {
         logger.fine(() -> String.format("Results fetched: %d candidate results, %d party results",
                 response.getCandidateResults().size(), response.getPartyResults().size()));
         return ResponseEntity.ok(response);
+    }
+
+
+    private String decryptVoteAES(String base64EncryptedData) throws Exception {
+        byte[] encryptedDataWithIv = Base64.getDecoder().decode(base64EncryptedData);
+
+        byte[] iv = Arrays.copyOfRange(encryptedDataWithIv, 0, 16);
+        byte[] encryptedData = Arrays.copyOfRange(encryptedDataWithIv, 16, encryptedDataWithIv.length);
+
+        // Replace with your real key (from secure storage)
+        SecretKey secretKey = generateAesKey();
+
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, new IvParameterSpec(iv));
+
+        byte[] decryptedBytes = cipher.doFinal(encryptedData);
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
+    }
+
+    public SecretKey generateAesKey() throws Exception {
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256); // or 128 if you prefer
+        return keyGen.generateKey();
     }
 }

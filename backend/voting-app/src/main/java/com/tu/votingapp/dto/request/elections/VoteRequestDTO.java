@@ -12,20 +12,24 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class VoteRequestDTO {
 
+    @NotNull
+    private String userId;
+
     @NotNull(message = "electionId is required")
     private Long electionId;
 
     /** Exactly one of candidateId or partyId must be set */
     private Long candidateId;
     private Long partyId;
-
-    @NotBlank(message = "appVersion is required")
-    private String appVersion;
-
     @AssertTrue(
             message = "You must vote for either a candidate or a party, but not both"
     )
     private boolean isValidChoice() {
         return (candidateId != null) ^ (partyId != null);
     }
+
+    @NotBlank(message = "appVersion is required")
+    private String appVersion;
+
+
 }

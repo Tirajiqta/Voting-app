@@ -65,4 +65,6 @@ public interface UserService extends BaseService<UserDTO, Long> {
      * Remove a permission from a role.
      */
     void removePermissionFromRole(Long roleId, Long permissionId);
+
+    List<UserDTO> findAllUsers();
 }

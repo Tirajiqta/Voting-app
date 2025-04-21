@@ -12,7 +12,10 @@ import java.util.Date;
 public class VoteDTO {
     private Long id;
     private Long userId;
-    // Represent the associated election by its ID
     private Long electionId;
+    // ID of the candidate being voted for. Can be null if voting only for a party.
+    private Long candidateId;
+    // ID of the party being voted for. Can be null if voting for an independent candidate.
+    private Long partyId;
     private Date voteTimestamp;
 }

@@ -50,4 +50,8 @@ public class ReferendumEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
     private UserEntity createdBy;
+
+    public ReferendumEntity(Long id) {
+        this.id = id;
+    }
 }
