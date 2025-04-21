@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     // kotlinx-serialization plugin
     kotlin("plugin.serialization") version "1.9.0"
+    id("com.google.devtools.ksp") // <-- APPLY KSP plugin to this module
+    id("com.google.dagger.hilt.android") // <-- APPLY Hilt plugin to this module
 }
 
 android {
@@ -77,4 +79,17 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
     // ML Kit Text Recognition
     implementation("com.google.mlkit:text-recognition:16.0.0")
+    val roomVersion = "2.5.2"
+    val hiltVersion = "2.51.1" // Or better: libs.versions.hilt.get()
+    implementation("com.google.dagger:hilt-android:$hiltVersion") // <-- **** ADD THIS LINE ****
+    implementation("androidx.room:room-runtime:$roomVersion")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")   // <-- Use 'ksp' configuration
+    ksp("com.google.dagger:hilt-compiler:$hiltVersion") // <-- ADD Hilt KSP Compiler
+
+    // Kotlin Extensions and Coroutines support for Room
+    implementation("androidx.room:room-ktx:$roomVersion")
+
+    // Testing dependencies (if you plan to write Room tests)
+    testImplementation("androidx.room:room-testing:$roomVersion")
 }

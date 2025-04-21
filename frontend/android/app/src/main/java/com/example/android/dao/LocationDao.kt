@@ -1,19 +1,27 @@
 package com.example.android.dao
 
-import android.database.sqlite.SQLiteDatabase
-import com.example.android.db.orm.DbApi
 import com.example.android.entity.LocationEntity
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 
-class LocationDao(private val db: SQLiteDatabase) {
-    fun insert(location: LocationEntity) = DbApi.insert(db, location)
+@Dao
+interface LocationDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(location: LocationEntity): Long
 
-    fun update(location: LocationEntity) = DbApi.update(db, location)
+    @Update
+    fun update(location: LocationEntity)
 
-    fun delete(location: LocationEntity) = DbApi.delete(db, location)
+    @Delete
+    fun delete(location: LocationEntity)
 
-    fun getAll(): List<LocationEntity> = DbApi.queryAll(db, LocationEntity::class)
+    @Query("SELECT * FROM Location")
+    fun getAll(): List<LocationEntity>
 
-    fun findById(id: Long): LocationEntity? {
-        return DbApi.queryWhere(db, LocationEntity::class, "id = ?", arrayOf(id.toString())).firstOrNull()
-    }
+    @Query("SELECT * FROM Location WHERE id = :id")
+    fun findById(id: Long): LocationEntity?
 }

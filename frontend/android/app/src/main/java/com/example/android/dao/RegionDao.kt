@@ -1,19 +1,30 @@
 package com.example.android.dao
 
-import android.database.sqlite.SQLiteDatabase
-import com.example.android.db.orm.DbApi
 import com.example.android.entity.RegionEntity
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 
-class RegionDao(private val db: SQLiteDatabase) {
-    fun insert(region: RegionEntity) = DbApi.insert(db, region)
+@Dao
+interface RegionDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(region: RegionEntity): Long
 
-    fun update(region: RegionEntity) = DbApi.update(db, region)
+    @Update
+    fun update(region: RegionEntity)
 
-    fun delete(region: RegionEntity) = DbApi.delete(db, region)
+    @Delete
+    fun delete(region: RegionEntity)
 
-    fun getAll(): List<RegionEntity> = DbApi.queryAll(db, RegionEntity::class)
+    @Query("SELECT * FROM region")
+    fun getAll(): List<RegionEntity>
 
-    fun findById(id: Long): RegionEntity? {
-        return DbApi.queryWhere(db, RegionEntity::class, "id = ?", arrayOf(id.toString())).firstOrNull()
-    }
+    @Query("SELECT * FROM region WHERE id = :id")
+    fun findById(id: Long): RegionEntity?
+
+    @Query("SELECT COUNT(*) FROM region")
+    fun getCount(): Int
 }

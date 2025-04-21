@@ -1,38 +1,40 @@
 package com.example.android.entity.election
 
-import com.example.android.db.orm.Column
-import com.example.android.db.orm.Table
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.example.android.ui.theme.viewmodels.ElectionDisplayItem
 
-@Table(name = "elections")
+@Entity(tableName = "elections")
 data class ElectionEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
-    val id: Long? = null,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
 
-    @Column(name = "election_name")
+    @ColumnInfo(name = "election_name")
     val electionName: String,
 
-    @Column(name = "description")
+    @ColumnInfo(name = "description")
     val description: String? = null,
 
-    @Column(name = "start_date")
+    @ColumnInfo(name = "start_date")
     val startDate: String, // Use ISO date format (e.g. 2024-05-01)
 
-    @Column(name = "end_date")
+    @ColumnInfo(name = "end_date")
     val endDate: String,
 
-    @Column(name = "election_type")
+    @ColumnInfo(name = "election_type")
     val electionType: String, // Store enum as String (e.g. "PRESIDENTIAL")
 
-    @Column(name = "status")
+    @ColumnInfo(name = "status")
     val status: String, // Store enum as String (e.g. "ONGOING")
 
-    @Column(name = "created_by")
-    val createdById: Long,
-){
+    @ColumnInfo(name = "created_by")
+    val createdById: Long
+) {
     fun toDisplayItem(): ElectionDisplayItem {
         return ElectionDisplayItem(
-            id = this.id?:1,
+            id = this.id,
             name = this.electionName
         )
     }

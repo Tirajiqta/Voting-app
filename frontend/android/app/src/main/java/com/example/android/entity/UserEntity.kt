@@ -1,31 +1,46 @@
 package com.example.android.entity
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 import com.example.android.db.orm.Column
 import com.example.android.db.orm.Table
 
-@Table(name = "User")
+@Entity(
+    tableName = "User",
+    foreignKeys = [
+        ForeignKey(
+            entity = LocationEntity::class, // Assuming you have a LocationEntity
+            parentColumns = ["id"],
+            childColumns = ["locationId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class UserEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
-    val id: Long? = null,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
 
-    @Column(name = "name")
+    @ColumnInfo(name = "name")
     val name: String,
 
-    @Column(name = "email")
+    @ColumnInfo(name = "email")
     val email: String,
 
-    @Column(name = "phone")
+    @ColumnInfo(name = "phone")
     val phone: String,
 
-    @Column(name = "password")
+    @ColumnInfo(name = "password")
     val password: String,
 
-    @Column(name = "currentAddress")
+    @ColumnInfo(name = "currentAddress")
     val currentAddress: String,
 
-    @Column(name = "locationId")
+    @ColumnInfo(name = "locationId")
     val locationId: Long, // foreign key to LocationEntity
 
-    @Column(name = "egn")
+    @ColumnInfo(name = "egn")
     val egn: String
 )

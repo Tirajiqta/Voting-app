@@ -14,7 +14,7 @@ import com.example.android.utils.mappers.RoleMapper.toDto
 object UserMapper {
 
     fun UserDTO.toEntity(): UserEntity = UserEntity(
-        id = this.id,
+        id = this.id?:1,
         name = this.name?:"",
         email = this.email?:"",
         phone = this.phone?:"",

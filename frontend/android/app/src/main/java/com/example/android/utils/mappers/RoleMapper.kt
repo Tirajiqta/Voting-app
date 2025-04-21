@@ -8,7 +8,7 @@ import com.example.android.utils.mappers.PermissionMapper.toEntity
 object RoleMapper {
 
     fun RoleDTO.toEntity(): RoleEntity = RoleEntity(
-        id = this.id,
+        id = this.id?:1,
         name = this.name
     ).also { role ->
         role.permissions = this.permissions.map { it.toEntity() }

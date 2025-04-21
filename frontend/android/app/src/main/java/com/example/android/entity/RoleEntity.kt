@@ -1,16 +1,21 @@
 package com.example.android.entity
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.Ignore
+import androidx.room.PrimaryKey
 import com.example.android.db.orm.Column
 import com.example.android.db.orm.Table
 
-@Table(name = "Role")
+@Entity(tableName = "Role")
 data class RoleEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
-    val id: Long? = null,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
 
-    @Column(name = "name")
+    @ColumnInfo(name = "name")
     val name: String,
 
-    @Transient
+    @Ignore
     var permissions: List<PermissionEntity> = emptyList()
 )

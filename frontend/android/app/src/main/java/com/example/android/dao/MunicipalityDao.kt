@@ -1,19 +1,27 @@
 package com.example.android.dao
 
-import android.database.sqlite.SQLiteDatabase
-import com.example.android.db.orm.DbApi
 import com.example.android.entity.MunicipalityEntity
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import androidx.room.Update
 
-class MunicipalityDao(private val db: SQLiteDatabase) {
-    fun insert(municipality: MunicipalityEntity) = DbApi.insert(db, municipality)
+@Dao
+interface MunicipalityDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(municipality: MunicipalityEntity): Long
 
-    fun update(municipality: MunicipalityEntity) = DbApi.update(db, municipality)
+    @Update
+    fun update(municipality: MunicipalityEntity): Int
 
-    fun delete(municipality: MunicipalityEntity) = DbApi.delete(db, municipality)
+    @Delete
+    fun delete(municipality: MunicipalityEntity): Int
 
-    fun getAll(): List<MunicipalityEntity> = DbApi.queryAll(db, MunicipalityEntity::class)
+    @Query("SELECT * FROM Municipality")
+    fun getAll(): List<MunicipalityEntity>
 
-    fun findById(id: Long): MunicipalityEntity? {
-        return DbApi.queryWhere(db, MunicipalityEntity::class, "id = ?", arrayOf(id.toString())).firstOrNull()
-    }
+    @Query("SELECT * FROM Municipality WHERE id = :id")
+    fun findById(id: Long): MunicipalityEntity?
 }

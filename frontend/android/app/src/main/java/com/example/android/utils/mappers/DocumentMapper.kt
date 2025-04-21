@@ -7,7 +7,7 @@ import com.example.android.entity.DocumentEntity
 object DocumentMapper {
 
     fun DocumentDTO.toEntity(userId: Long): DocumentEntity = DocumentEntity(
-        id = this.id,
+        id = this.id?:1,
         number = this.number,
         validFrom = this.validFrom,
         validTo = this.validTo,

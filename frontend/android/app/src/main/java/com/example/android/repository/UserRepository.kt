@@ -22,11 +22,11 @@ class UserRepository(private val userDao: UserDao) {
         })
     }
 
-    fun getUserById(userId: Long): UserEntity? {
-        return userDao.getById(userId)
+    suspend fun getUserById(userId: Long): UserEntity? {
+        return userDao.getUserById(userId)
     }
 
-    fun saveUser(user: UserEntity) {
+    suspend fun saveUser(user: UserEntity) {
         userDao.insert(user)
     }
 

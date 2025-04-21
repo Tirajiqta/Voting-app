@@ -1,28 +1,45 @@
 package com.example.android.entity.election
 
-import com.example.android.db.orm.Column
-import com.example.android.db.orm.Table
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 
-@Table(name = "candidates")
+@Entity(
+    tableName = "candidates",
+    foreignKeys = [
+        ForeignKey(
+            entity = ElectionEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["election_id"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class CandidateEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
-    val id: Long? = null,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
 
-    @Column(name = "name")
+    @ColumnInfo(name = "name")
     val name: String,
 
-    @Column(name = "bio")
+    @ColumnInfo(name = "bio")
     val bio: String? = null,
 
-    @Column(name = "election_id")
-    val electionId: Long, // Foreign key to ElectionEntity
+    @ColumnInfo(name = "election_id")
+    val electionId: Long,
 
-    @Column(name = "votes_count")
+    @ColumnInfo(name = "votes_count")
     val votesCount: Int = 0,
 
-    @Column(name = "image_uri")
+    @ColumnInfo(name = "image_uri")
     val imageUri: String? = null,
 
-    @Column(name = "position")
-    val position: String? = null
+    @ColumnInfo(name = "position")
+    val position: String? = null,
+
+    @ColumnInfo(name = "party_id")
+    val partyId: Long? = null
+
 )

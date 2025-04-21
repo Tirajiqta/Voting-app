@@ -1,34 +1,49 @@
 package com.example.android.entity
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 import com.example.android.db.orm.Column
 import com.example.android.db.orm.Table
 
-@Table(name = "Document")
+@Entity(
+    tableName = "Document",
+    foreignKeys = [
+        ForeignKey(
+            entity = UserEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class DocumentEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
-    val id: Long? = null,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
 
-    @Column(name = "number")
+    @ColumnInfo(name = "number")
     val number: String,
 
-    @Column(name = "validFrom")
+    @ColumnInfo(name = "validFrom")
     val validFrom: String, // Stored as ISO 8601 string: "yyyy-MM-dd"
 
-    @Column(name = "validTo")
+    @ColumnInfo(name = "validTo")
     val validTo: String,
 
-    @Column(name = "issuer")
+    @ColumnInfo(name = "issuer")
     val issuer: String,
 
-    @Column(name = "gender")
+    @ColumnInfo(name = "gender")
     val gender: Int,
 
-    @Column(name = "dateOfBirth")
+    @ColumnInfo(name = "dateOfBirth")
     val dateOfBirth: String,
 
-    @Column(name = "permanentAddress")
+    @ColumnInfo(name = "permanentAddress")
     val permanentAddress: String,
 
-    @Column(name = "userId")
+    @ColumnInfo(name = "userId")
     val userId: Long // foreign key to UserEntity
 )

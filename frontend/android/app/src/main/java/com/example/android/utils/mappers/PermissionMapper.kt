@@ -6,7 +6,7 @@ import com.example.android.entity.PermissionEntity
 object PermissionMapper {
 
     fun PermissionDTO.toEntity(): PermissionEntity = PermissionEntity(
-        id = this.id,
+        id = this.id?:1,
         name = this.name?:""
     )
 

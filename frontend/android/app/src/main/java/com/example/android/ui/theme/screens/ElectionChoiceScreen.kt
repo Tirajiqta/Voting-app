@@ -37,17 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.android.dao.election.CandidateDao
-import com.example.android.dao.election.ElectionDao
-import com.example.android.dao.election.PartyDao
-import com.example.android.dao.election.PartyVoteDao
-import com.example.android.dao.election.VoteDao
-import com.example.android.db.Database
-import com.example.android.entity.election.CandidateEntity
-import com.example.android.entity.election.ElectionEntity
-import com.example.android.entity.election.PartyEntity
-import com.example.android.entity.election.PartyVoteEntity
-import com.example.android.entity.election.VoteEntity
+import com.example.android.db.AppDatabase
 import com.example.android.repository.ElectionsRepository
 import com.example.android.ui.theme.viewmodels.ElectionChoiceUiState
 import com.example.android.ui.theme.viewmodels.ElectionChoiceViewModel
@@ -64,14 +54,14 @@ fun ElectionChoiceScreen(
     onNavigateToVote: (selectedElectionIds: List<Long>) -> Unit,
 ) {
     val context = LocalContext.current
-    val appDatabase = remember { Database.getInstance(context.applicationContext) } // Adjust getInstance if needed
-    val writableDb = remember { appDatabase.writableDatabase }
+    val appDatabase = remember { AppDatabase.getInstance(context.applicationContext) } // Adjust getInstance if needed
 
-    val electionDao = remember { ElectionDao(writableDb) }
-    val candidateDao = remember { CandidateDao(writableDb) }
-    val partyDao = remember { PartyDao(writableDb) }
-    val partyVoteDao = remember { PartyVoteDao(writableDb) }
-    val voteDao = remember { VoteDao(writableDb) }
+// Get DAOs from the Room database instance
+    val electionDao = appDatabase.electionDao()
+    val candidateDao = appDatabase.candidateDao()
+    val partyDao = appDatabase.partyDao()
+    val partyVoteDao = appDatabase.partyVoteDao()
+    val voteDao = appDatabase.voteDao()
     // 3. Create the ElectionsRepository instance using the DAOs
     val electionsRepository = remember { ElectionsRepository(
         electionDao = electionDao,

@@ -1,22 +1,26 @@
 package com.example.android.entity.election
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.example.android.db.orm.Column
 import com.example.android.db.orm.Table
 
-@Table(name = "parties")
+@Entity(tableName = "parties")
 data class PartyEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
-    val id: Long? = null,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
 
-    @Column(name = "name")
+    @ColumnInfo(name = "name")
     val name: String,
 
-    @Column(name = "abbreviation")
+    @ColumnInfo(name = "abbreviation")
     val abbreviation: String? = null,
 
-    @Column(name = "logo_url")
+    @ColumnInfo(name = "logo_url")
     val logoUrl: String? = null,
 
-    @Column(name = "leader_name")
+    @ColumnInfo(name = "leader_name")
     val leaderName: String? = null
 )

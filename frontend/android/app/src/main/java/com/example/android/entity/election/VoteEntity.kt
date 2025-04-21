@@ -1,26 +1,53 @@
 package com.example.android.entity.election
 
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 import com.example.android.db.orm.Column
 import com.example.android.db.orm.Table
 
 
-@Table(name = "votes")
+@Entity(
+    tableName = "votes",
+    foreignKeys = [
+        ForeignKey(
+            entity = ElectionEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["election_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = CandidateEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["candidate_id"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = PartyEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["party_id"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class VoteEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
-    val id: Long? = null,
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
+    val id: Long = 0,
 
-    @Column(name = "user_id")
+    @ColumnInfo(name = "user_id")
     val userId: Long,
 
-    @Column(name = "election_id")
+    @ColumnInfo(name = "election_id")
     val electionId: Long,
 
-    @Column(name = "candidate_id")
+    @ColumnInfo(name = "candidate_id")
     val candidateId: Long? = null,
 
-    @Column(name = "party_id")
+    @ColumnInfo(name = "party_id")
     val partyId: Long? = null,
 
-    @Column(name = "vote_timestamp")
+    @ColumnInfo(name = "vote_timestamp")
     val voteTimestamp: String // Store as ISO 8601 string, e.g. "2025-04-19T16:00:00"
 )
