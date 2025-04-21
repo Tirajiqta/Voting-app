@@ -21,12 +21,7 @@ public class VoteRequestDTO {
     /** Exactly one of candidateId or partyId must be set */
     private Long candidateId;
     private Long partyId;
-    @AssertTrue(
-            message = "You must vote for either a candidate or a party, but not both"
-    )
-    private boolean isValidChoice() {
-        return (candidateId != null) ^ (partyId != null);
-    }
+    private String encryptedVote;
 
     @NotBlank(message = "appVersion is required")
     private String appVersion;

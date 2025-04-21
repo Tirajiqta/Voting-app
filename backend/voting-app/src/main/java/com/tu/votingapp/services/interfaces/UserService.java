@@ -5,6 +5,7 @@ import com.tu.votingapp.dto.general.RoleDTO;
 import com.tu.votingapp.dto.general.UserDTO;
 import com.tu.votingapp.dto.request.DocumentRequestDTO;
 import com.tu.votingapp.dto.response.DocumentResponseDTO;
+import com.tu.votingapp.dto.response.UserProfileDetailsDTO;
 import com.tu.votingapp.services.BaseService;
 
 import java.util.List;
@@ -67,4 +68,6 @@ public interface UserService extends BaseService<UserDTO, Long> {
     void removePermissionFromRole(Long roleId, Long permissionId);
 
     List<UserDTO> findAllUsers();
+    UserProfileDetailsDTO getUserProfileDetailsById(Long userId);
+
 }

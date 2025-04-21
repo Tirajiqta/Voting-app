@@ -139,7 +139,7 @@ public class ElectionController {
         try {
 
             // Parse the decrypted JSON to extract values (e.g., using Jackson or Gson)
-
+            String decrypted = decryptVoteAES(request.getEncryptedVote());
             VoteDTO response = voteService.castVote(request);
 
             logger.info(() -> "Vote recorded id=" + response.getId());

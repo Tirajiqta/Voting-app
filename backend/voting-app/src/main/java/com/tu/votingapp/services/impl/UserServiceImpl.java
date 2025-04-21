@@ -5,19 +5,24 @@ import com.tu.votingapp.dto.general.RoleDTO;
 import com.tu.votingapp.dto.general.UserDTO;
 import com.tu.votingapp.dto.request.DocumentRequestDTO;
 import com.tu.votingapp.dto.response.DocumentResponseDTO;
+import com.tu.votingapp.dto.response.UserProfileDetailsDTO;
 import com.tu.votingapp.entities.*;
 import com.tu.votingapp.repositories.interfaces.*;
 import com.tu.votingapp.security.TokenProvider;
 import com.tu.votingapp.services.interfaces.UserService;
 import com.tu.votingapp.utils.mappers.UserMapper;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -197,10 +202,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO getById(Long id) {
+        // This implementation should already exist, ensure it fetches and maps correctly
         logger.info(() -> "Fetching user profile id=" + id);
         UserEntity user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + id)); // Use a specific exception
         UserDTO dto = userMapper.toDto(user);
+        // Ensure password hash is NEVER returned from any get method
+        dto.setPassword(null);
         logger.fine(() -> "Fetched user id=" + dto.getId() + ", email='" + dto.getEmail() + "'");
         return dto;
     }
@@ -414,4 +422,59 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
+    @Override
+    @Transactional // Add if lazy loading might occur for the document relationship
+    public UserProfileDetailsDTO getUserProfileDetailsById(Long userId) {
+        logger.info(() -> "Service: Fetching full profile details for userId=" + userId);
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    // Log clearly if a user ID that should exist (from principal) isn't found
+                    logger.log(Level.SEVERE, "Authenticated user ID not found in database: " + userId);
+                    return new EntityNotFoundException("User not found: " + userId);
+                });
+
+        // Map user data using existing logic/mapper
+        UserDTO userDto = userMapper.toDto(user);
+        userDto.setPassword(null); // Ensure password hash is not included
+
+        // Map document data (if exists)
+        DocumentResponseDTO docDto = null;
+        DocumentEntity doc = user.getDocument(); // Assumes UserEntity has a mapped relationship to DocumentEntity
+
+        if (doc != null) {
+            logger.fine(() -> "Found document id=" + doc.getId() + " for userId=" + userId);
+            try {
+                // Perform null checks on dates before conversion
+                java.time.LocalDate validFromDate = (doc.getValidFrom() != null) ? doc.getValidFrom().toLocalDate() : null;
+                java.time.LocalDate validToDate = (doc.getValidTo() != null) ? doc.getValidTo().toLocalDate() : null;
+                java.time.LocalDate dateOfBirth = (doc.getDateOfBirth() != null) ? doc.getDateOfBirth().toLocalDate() : null;
+
+                docDto = new DocumentResponseDTO(
+                        doc.getId(),
+                        doc.getNumber(),
+                        validFromDate,
+                        validToDate,
+                        doc.getIssuer(),
+                        doc.getGender(),
+                        dateOfBirth,
+                        doc.getPermanentAddress(),
+                        userId
+                );
+            } catch (Exception e) {
+                // Log potential errors during date conversion or mapping
+                logger.log(Level.WARNING, "Error mapping DocumentEntity to DTO for userId=" + userId + ", docId=" + doc.getId(), e);
+                // Decide if you want to return null docDto or throw an error
+            }
+        } else {
+            logger.fine(() -> "No document found for userId=" + userId + " while fetching full details.");
+        }
+
+        // Combine into the new DTO
+        return new UserProfileDetailsDTO(userDto, docDto);
+    }
+
+    private Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return ((com.tu.votingapp.security.UserPrincipal) auth.getPrincipal()).getId();
+    }
 }

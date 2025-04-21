@@ -5,8 +5,10 @@ import com.tu.votingapp.dto.request.DocumentRequestDTO;
 import com.tu.votingapp.dto.request.LoginRequest;
 import com.tu.votingapp.dto.response.DocumentResponseDTO;
 import com.tu.votingapp.dto.response.LoginResponse;
+import com.tu.votingapp.dto.response.UserProfileDetailsDTO;
 import com.tu.votingapp.security.UserPrincipal;
 import com.tu.votingapp.services.interfaces.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -148,4 +151,36 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null); // Or ErrorResponseDTO
         }
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<UserProfileDetailsDTO> getCurrentUserProfileDetails(
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+        if (principal == null) {
+            // This shouldn't happen if security is configured correctly, but handle defensively
+            logger.warning("Attempt to access /me endpoint without authentication principal.");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        Long userId = principal.getId();
+        logger.info(() -> "Fetching full profile details for authenticated userId=" + userId);
+
+        try {
+            UserProfileDetailsDTO userDetails = userService.getUserProfileDetailsById(userId);
+            // No need to check for null userDetails if getUserProfileDetailsById throws exception on not found
+
+            logger.fine(() -> "Full profile details retrieved successfully for userId=" + userId);
+            return ResponseEntity.ok(userDetails);
+
+        } catch (EntityNotFoundException e) { // Catch the specific exception from the service
+            // Log the error - user from token not found in DB is a serious issue
+            logger.log(Level.SEVERE, "User associated with valid token not found in DB. UserID: " + userId, e);
+            // Return Not Found, although Internal Server Error might also be appropriate
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) { // Catch any other unexpected errors
+            logger.log(Level.SEVERE, "Unexpected error fetching full profile details for userId=" + userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Return 500 for general errors
+        }
+    }
+
 }
