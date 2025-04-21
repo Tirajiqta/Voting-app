@@ -23,6 +23,12 @@ import com.example.android.dto.response.RoleDTO
 import com.example.android.dto.response.UserDTO
 import com.example.compose.AppTheme
 import java.time.LocalDate
+import com.example.android.dto.request.LoginRequest
+import com.example.android.dto.response.LoginResponse
+import com.example.android.api.VotingApi
+
+import kotlinx.coroutines.launch
+import java.io.IOException
 
 @SuppressLint("NewApi")
 @Composable
@@ -30,6 +36,60 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
     val context = LocalContext.current
     var egn by remember { mutableStateOf("") }
     var doc_id by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var error by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
+
+    fun attemptLogin() {
+        if (egn.isBlank() || doc_id.isBlank()) {
+            error = "Моля, попълнете ЕГН и номер на документ."
+            return
+        }
+
+        scope.launch {
+            isLoading = true
+            error = null
+
+            try {
+                val dto = LoginRequest(egn = egn, documentNumber = doc_id)
+                // Call the suspending function from your VotingApi object
+                val response: LoginResponse = VotingApi.loginSuspending(dto) // <<< USING YOUR API
+
+                // --- Handle Success ---
+                println("Login successful!")
+                println("Received Token: ${response.token}") // Log the token
+                // TODO: Securely save the response.token (e.g., EncryptedSharedPreferences)
+                // Example: TokenStorage.saveToken(context, response.token)
+                onLoginSuccess() // Navigate after successful login and token handling
+
+            } catch (e: Throwable) {
+                // --- Handle Failure (Exceptions) ---
+                println("Login failed!")
+                println("Error Type: ${e::class.java.simpleName}")
+                println("Error Message: ${e.message}")
+                e.printStackTrace()
+
+                // Set user-friendly error message based on exception type
+                error = when (e) {
+                    is IOException -> "Грешка в мрежата. Моля, проверете връзката си."
+                    is kotlinx.serialization.SerializationException -> "Грешка при обработка на отговора от сървъра."
+                    // Add specific checks for HTTP errors if ApiClient threw them differently
+                    // is HttpException -> "Грешка ${e.code()}: ..."
+                    else -> e.message ?: "Възникна грешка. Моля, опитайте отново." // Show backend message if available
+                }
+
+            } finally {
+                isLoading = false
+            }
+        }
+    }
+
+    LaunchedEffect(error) {
+        error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -47,111 +107,62 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             fontSize = 30.sp
         )
 
+        //Spacer(modifier = Modifier.height(24.dp)) // Add spacing
+
         OutlinedTextField(
             value = egn,
-            onValueChange = { egn = it },
+            onValueChange = { egn = it; if (error != null) error = null },
             label = { Text("ЕГН") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            singleLine = true
+            singleLine = true,
+            isError = error != null
         )
 
         OutlinedTextField(
             value = doc_id,
-            onValueChange = { doc_id = it },
+            onValueChange = { doc_id = it; if (error != null) error = null },
             label = { Text("Номер на лична карта") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            singleLine = true
+            singleLine = true,
+            isError = error != null
         )
-        /*
-        Button(
-            onClick = {
-                Toast.makeText(context, "Влизане...", Toast.LENGTH_SHORT).show()
 
-                val dto = UserDTO(
-                    id = 12345L,
-                    name = "Ivan Petrov",
-                    email = "ivan.petrov1980@testmail.com",
-                    phone = "+359887654321",
-                    password = "Str0ngP@ssw0rd!",
-                    currentAddress = "бул. Владимир Вазов 10, София, България",
-                    locationId = LocationResponseDTO(
-                        id = 42,
-                        name = "Sofia",
-                        municipality = MunicipalityResponseDTO(
-                            id = 1,
-                            name = "sofia",
-                            population = 1234,
-                            region = RegionResponseDTO(
-                                id = 123,
-                                population = 123455,
-                                name = "sofia"
-                            )
-                        )
-                    ),
-                    egn = "8001010007",
-                    document = DocumentDTO(
-                        id = 987,
-                        permanentAddress = "test",
-                        validFrom = LocalDate.of(2018, 5, 20).toString(),
-                        dateOfBirth = LocalDate.of(2000, 5, 20).toString(),
-                        gender = 1,
-                        issuer = "test",
-                        number = "1",
-                        validTo = LocalDate.of(2028, 5, 20).toString()
-                    ),
-                    roles = RoleDTO(
-                        id = 2,
-                        name = "ADMIN"
-                    )
+        //Spacer(modifier = Modifier.height(16.dp))
+
+        Box(contentAlignment = Alignment.Center) {
+            Button(
+                onClick = { attemptLogin() },
+                enabled = !isLoading,
+                modifier = Modifier
+                    .width(220.dp)
+                    .height(60.dp)
+                    .padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
-
-                // Пример: изпращане на dto или логване
-                println(dto)
-
-                onLoginSuccess()
-            },
-            modifier = Modifier
-                .width(220.dp)
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        ) {
-            Text(
-                "ВЛЕЗ",
-                letterSpacing = 3.sp,
-                fontSize = 20.sp
-            )
-        }*/
-
-        Button(
-            onClick = {
-                Toast.makeText(context, "Влизане...", Toast.LENGTH_SHORT).show() 
-                onLoginSuccess()},
-            modifier = Modifier
-                .width(220.dp)
-                .padding(vertical = 8.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary,  // Background color
-                contentColor = MaterialTheme.colorScheme.onPrimary   // Text/icon color
-            )
-        ) {
-            Text(
-                "ВЛЕЗ",
-                letterSpacing = 3.sp,
-                fontSize = 20.sp)
+            ) {
+                if (!isLoading) {
+                    Text(
+                        "ВЛЕЗ",
+                        letterSpacing = 3.sp,
+                        fontSize = 20.sp
+                    )
+                }
+            }
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
-
-//        TextButton(onClick = onNavigateToRegister) {
-//            Text("Регистрирай се тук!")
-//        }
     }
 }
 
