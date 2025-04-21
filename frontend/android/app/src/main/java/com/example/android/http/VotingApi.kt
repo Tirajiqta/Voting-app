@@ -9,10 +9,11 @@ import com.example.android.dto.response.survey.SurveyOptionDTO
 import com.example.android.dto.response.survey.SurveyQuestionDTO
 import com.example.android.dto.response.survey.SurveyResponseDTO
 import com.example.android.dto.response.survey.SurveyResultsDTO
+//added
 
 object VotingApi {
 
-    private const val BASE_URL = "https://your.backend.api/api"
+    private const val BASE_URL = "https://desktop-4pa1111.tail83a47.ts.net/api"
 
     fun login(request: LoginRequest, callback: Callback<LoginResponse>) {
         ApiClient.post<LoginRequest, LoginResponse>(
@@ -22,6 +23,38 @@ object VotingApi {
             onFailure = callback::onFailure
         )
     }
+    //added
+    suspend fun loginSuspending(request: LoginRequest): LoginResponse {
+        // Use suspendCancellableCoroutine to bridge callback to coroutine
+        return kotlinx.coroutines.suspendCancellableCoroutine { continuation ->
+            // Call the original callback-based function
+            login(request, object : Callback<LoginResponse> {
+                override fun onSuccess(response: LoginResponse) {
+                    // Resume the coroutine with the successful result
+                    // Check if the coroutine is still active before resuming
+                    if (continuation.isActive) {
+                        continuation.resume(response) { /* Handle potential resume error if needed */ }
+                    }
+                }
+
+                override fun onFailure(error: Throwable) {
+                    // Resume the coroutine with the exception
+                    // Check if the coroutine is still active before resuming
+                    if (continuation.isActive) {
+                        continuation.resumeWith(Result.failure(error))
+                    }
+                }
+            })
+
+            // Optional: Handle coroutine cancellation if your ApiClient supports request cancellation
+            continuation.invokeOnCancellation {
+                // Example: If ApiClient had a way to cancel calls associated with a tag/token
+                // ApiClient.cancelRequest("login_${request.hashCode()}")
+                println("Login request coroutine cancelled")
+            }
+        }
+    }
+
 
     fun createElection(request: ElectionsRequestDTO, callback: Callback<ElectionResponseDTO>) {
         ApiClient.post<ElectionsRequestDTO, ElectionResponseDTO>(
