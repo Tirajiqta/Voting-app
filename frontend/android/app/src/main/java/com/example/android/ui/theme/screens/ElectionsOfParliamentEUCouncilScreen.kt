@@ -35,11 +35,11 @@ fun ParliamentVoteScreen(
     parties: List<Party>,
     candidates: List<Candidate>, // Pass all candidates, we'll filter later
     onNavigateBack: () -> Unit,
-    onReviewVote: (selectedPartyId: Int, selectedPreferenceId: Int?) -> Unit // Pass selected IDs
+    onReviewVote: (selectedPartyId: Int, selectedPreferenceId: Long?) -> Unit // Pass selected IDs
 ) {
     // --- State ---
     var selectedPartyId by remember { mutableStateOf<Int?>(null) }
-    var selectedPreferenceId by remember { mutableStateOf<Int?>(null) }
+    var selectedPreferenceId by remember { mutableStateOf<Long?>(null) }
 
     // Filter candidates only when the selected party changes
     val currentPartyCandidates by remember(selectedPartyId) {
@@ -223,8 +223,8 @@ fun PartyItem(
 @Composable
 fun PreferenceSelection(
     candidates: List<Candidate>,
-    selectedPreferenceId: Int?,
-    onPreferenceSelected: (candidateId: Int?) -> Unit // Allow deselecting preference maybe? Or pass null initially
+    selectedPreferenceId: Long?,
+    onPreferenceSelected: (candidateId: Long?) -> Unit // Allow deselecting preference maybe? Or pass null initially
 ) {
     Column(
         modifier = Modifier
@@ -244,7 +244,7 @@ fun PreferenceSelection(
         ) {
             candidates.forEach { candidate ->
                 PreferenceCircle(
-                    candidateId = candidate.id,
+                    candidateId = candidate.id.toInt(),
                     isSelected = candidate.id == selectedPreferenceId,
                     onSelected = {
                         // Allow selecting or deselecting preference by clicking again
@@ -314,21 +314,67 @@ fun ParliamentVoteScreenPreview() {
 
     val sampleCandidates = listOf(
         // Candidates for Party 8
-        Candidate(id = 101, name = "Канд. 1", partyId = 1),
-        Candidate(id = 102, name = "Канд. 2", partyId = 1),
-        Candidate(id = 103, name = "Канд. 3", partyId = 2),
-        Candidate(id = 104, name = "Канд. 4", partyId = 2),
-        Candidate(id = 105, name = "Канд. 5", partyId = 3),
-        Candidate(id = 106, name = "Канд. 6", partyId = 3),
-        Candidate(id = 107, name = "Канд. 7", partyId = 4),
-        Candidate(id = 108, name = "Канд. 8", partyId = 4),
-        Candidate(id = 109, name = "Канд. 9", partyId = 5),
-        Candidate(id = 110, name = "Канд. 10", partyId = 5),
-        Candidate(id = 111, name = "Канд. 11", partyId = 6),
-        Candidate(id = 112, name = "Канд. 12", partyId = 6),
+        Candidate(
+            id = 1, name = "Канд. 1", partyId = 1,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 2, name = "Канд. 2", partyId = 1,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 3, name = "Канд. 3", partyId = 2,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 4, name = "Канд. 4", partyId = 2,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 5, name = "Канд. 5", partyId = 3,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 6, name = "Канд. 6", partyId = 3,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 7, name = "Канд. 7", partyId = 4,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 8, name = "Канд. 8", partyId = 4,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 9, name = "Канд. 9", partyId = 5,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 10, name = "Канд. 10", partyId = 5,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 11, name = "Канд. 105", partyId = 5,
+            preferenceNumber = 103
+        ),
+        Candidate(
+            id = 12, name = "Канд. 11", partyId = 6,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 13, name = "Канд. 12", partyId = 6,
+            preferenceNumber = 102
+        ),
         // Add candidates for other parties if needed for testing
-        Candidate(id = 101, name = "Друг 1", partyId = 7),
-        Candidate(id = 102, name = "Друг 2", partyId = 7),
+        Candidate(
+            id = 14, name = "Друг 1", partyId = 7,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 15, name = "Друг 2", partyId = 7,
+            preferenceNumber = 102
+        ),
     )
 
     AppTheme {

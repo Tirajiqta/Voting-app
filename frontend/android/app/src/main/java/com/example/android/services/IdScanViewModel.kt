@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.net.Uri
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
@@ -161,7 +162,7 @@ class IdScanViewModel(application: Application) : AndroidViewModel(application) 
                                 // --- Handle Mismatch ---
                                 // a) Set error message for Snackbar
                                 errorMessage.value = "Сканираното ЕГН не съвпада с вашето." // "Scanned EGN does not match yours."
-
+                                Toast.makeText(context, "Сканираното ЕГН не съвпада с вашето.", Toast.LENGTH_LONG).show()
                                 // b) Clear the image URI for the scanned side
                                 when (currentSide) {
                                     CaptureSide.FRONT -> frontImageUri.value = null

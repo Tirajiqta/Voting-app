@@ -1,6 +1,7 @@
 package com.example.android.ui.theme.screens
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,17 +38,16 @@ import kotlinx.coroutines.launch
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VotingScreen(
+fun VotingScreen( // This is the wrapper/container composable
     navController: NavController,
     electionId: Long,
-    userId: Long // Pass the logged-in user's ID here
+    userId: Long
 ) {
-    // --- ViewModel Setup ---
+    // --- ViewModel Setup (Same as before) ---
     val context = LocalContext.current
-    // Repository setup (consider moving this to a central dependency injection solution)
     val appDatabase = remember { AppDatabase.getInstance(context.applicationContext) }
     val electionsRepository = remember {
-        ElectionsRepository(
+        ElectionsRepository( /* ... DAOs ... */
             electionDao = appDatabase.electionDao(),
             candidateDao = appDatabase.candidateDao(),
             partyDao = appDatabase.partyDao(),
@@ -55,9 +55,7 @@ fun VotingScreen(
             voteDao = appDatabase.voteDao()
         )
     }
-    // Create SavedStateHandle manually if not using Hilt/other DI that provides it
     val savedStateHandle = remember { SavedStateHandle(mapOf("electionId" to electionId)) }
-
     val viewModel: VotingViewModel = viewModel(
         factory = VotingViewModelFactory(electionsRepository, savedStateHandle)
     )
@@ -65,74 +63,53 @@ fun VotingScreen(
     // --- State Collection ---
     val uiState by viewModel.uiState.collectAsState()
     var showConfirmationDialog by remember { mutableStateOf(false) }
+    // Store the IDs to be saved when the dialog is confirmed
+    var partyIdToSave by remember { mutableStateOf<Int?>(null) }
+    var preferenceIdToSave by remember { mutableStateOf<Long?>(null) }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // --- Navigation Effect ---
+    // --- Effects for Navigation and Snackbar (Same as before) ---
     LaunchedEffect(uiState.voteSavedSuccessfully) {
         if (uiState.voteSavedSuccessfully) {
-            // Navigate back or to a confirmation screen
-            // Example: Pop back stack to the screen before voting
+            // ONLY show snackbar here, DO NOT navigate or pop back stack
             scope.launch {
-                snackbarHostState.showSnackbar("Гласът е запазен успешно!") // Optional feedback
+                snackbarHostState.showSnackbar("Гласът е запазен успешно!")
             }
-            navController.popBackStack()
-            // Or navigate to a specific main screen route:
-            // navController.navigate("main_screen_route") {
-            //     popUpTo(navController.graph.startDestinationId) { inclusive = true }
-            // }
+            // navController.popBackStack() // <<< REMOVE THIS LINE >>>
         }
     }
 
-    // --- Error Handling Effect ---
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             scope.launch {
                 snackbarHostState.showSnackbar(errorMsg, duration = SnackbarDuration.Long)
             }
-            // Optionally clear the error in the ViewModel after showing it
-            // viewModel.clearError()
+            viewModel.clearError() // Clear error after showing
         }
     }
 
-
+    // --- UI ---
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text(uiState.electionName.ifEmpty { "Гласуване" }) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            )
-        },
-        bottomBar = {
-            // Button placed in the bottom bar area for consistent placement
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.surface, // Or another appropriate color
-            ) {
-                Spacer(Modifier.weight(1f)) // Push button to the end
-                Button(
-                    onClick = { showConfirmationDialog = true },
-                    enabled = uiState.selectedPartyId != null && uiState.selectedCandidateId != null && !uiState.isLoading,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text("Следващ")
-                }
-            }
-        }
-    ) { paddingValues ->
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+        // TopBar and BottomBar are now handled *inside* ParliamentVoteScreen
+    ) { paddingValues -> // Padding from Scaffold is passed down
 
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues) // Apply padding from Scaffold
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+            // Apply padding from Scaffold if ParliamentVoteScreen doesn't handle it internally
+                .padding(paddingValues)
         ) {
             when {
-                uiState.isLoading && uiState.parties.isEmpty() -> { // Show loading only initially
+                // Initial Loading State
+                uiState.isLoading && uiState.parties.isEmpty() -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
-                !uiState.isLoading && uiState.error != null && uiState.parties.isEmpty() -> { // Show error only if loading failed
+                // Initial Error State
+                !uiState.isLoading && uiState.error != null && uiState.parties.isEmpty() -> {
                     Text(
                         text = uiState.error ?: "Възникна грешка",
                         color = MaterialTheme.colorScheme.error,
@@ -143,104 +120,104 @@ fun VotingScreen(
                     )
                 }
 
+                // Data Loaded State
                 else -> {
-                    // Main content: Party list and Preference grid
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp) // Padding around the row
-                    ) {
-                        // --- Party List (Left Side) ---
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f) // Takes half the width
-                                .padding(end = 4.dp) // Space between columns
-                                .border(1.dp, MaterialTheme.colorScheme.outline)
-                        ) {
-                            items(uiState.parties, key = { it.id }) { party ->
-                                PartyItem(
-                                    party = party,
-                                    isSelected = party.id == uiState.selectedPartyId,
-                                    onPartyClick = { viewModel.selectParty(party.id) }
-                                )
-                                Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                            }
+                    ParliamentVoteScreen(
+                        // Pass data from ViewModel State
+                        electionTitle = uiState.electionTitle,
+                        electionDate = uiState.electionDate,
+                        parties = uiState.parties,
+                        candidates = uiState.candidates,
+                        onNavigateBack = { navController.popBackStack() }, // Simple back navigation
+                        onReviewVote = { selectedPartyId, selectedPreferenceId ->
+                            // Store the selected IDs and show the dialog
+                            partyIdToSave = selectedPartyId
+                            preferenceIdToSave = selectedPreferenceId
+                            showConfirmationDialog = true
                         }
+                        // Note: ParliamentVoteScreen handles its own Scaffold, Top/Bottom bars
+                    )
 
-                        // --- Preferences (Right Side) ---
-                        Column(
+                    // Overlay loading indicator when saving vote
+                    if (uiState.isLoading && !uiState.parties.isEmpty()) { // Show saving indicator only after initial load
+                        Box(
                             modifier = Modifier
-                                .weight(1f) // Takes the other half
-                                .padding(start = 4.dp) // Space between columns
-                                .border(1.dp, MaterialTheme.colorScheme.outline)
-                                .padding(8.dp) // Inner padding for the preference area
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.3f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                "Предпочитание (Преференция)",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp),
-                                textAlign = TextAlign.Center
-                            )
-                            if (uiState.selectedPartyId == null) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("Моля, изберете партия", textAlign = TextAlign.Center)
-                                }
-                            } else if (uiState.candidatesForSelectedParty.isEmpty()) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "Няма преференции за тази партия",
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            } else {
-                                LazyVerticalGrid(
-                                    columns = GridCells.Adaptive(minSize = 50.dp), // Adjust minSize for circle size
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    items(uiState.candidatesForSelectedParty, key = { it.id }) { candidate ->
-                                        PreferenceItem(
-                                            candidate = candidate,
-                                            isSelected = candidate.id == uiState.selectedCandidateId,
-                                            onPreferenceClick = { viewModel.selectCandidate(candidate.id) }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    } // End Row
-
-                    // Show loading overlay when saving vote
-                    if (uiState.isLoading && uiState.selectedPartyId != null) {
-                        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)), contentAlignment = Alignment.Center){
                             CircularProgressIndicator()
                         }
                     }
-                } // End Else
+                }
             } // End When
         } // End Box
 
-        // --- Confirmation Dialog ---
+        // --- Confirmation Dialog (Remains the same, triggered differently) ---
         if (showConfirmationDialog) {
             ConfirmationDialog(
                 onConfirm = {
                     showConfirmationDialog = false
-                    viewModel.saveVote(userId) // Pass the actual userId
+                    // Use the stored IDs to save the vote
+                    partyIdToSave?.let { pId -> // pId is the Party's Int ID from UI
+                        val selectedPreferenceNumber = preferenceIdToSave // The Int preference number
+
+                        // --- <<< TEMPORARY LOOKUP LOGIC STARTS HERE >>> ---
+                        var actualCandidatePrimaryKey: Long? = null
+                        if (selectedPreferenceNumber != null) {
+                            // Find the candidate in the current UI state's list
+                            // NOTE: This relies on uiState.candidates being up-to-date and correct
+                            val foundCandidate = uiState.candidates.firstOrNull { candidate ->
+                                // Match the Party Int ID AND the Preference Number
+                                candidate.partyId == pId && candidate.preferenceNumber.toLong() == selectedPreferenceNumber
+                            }
+
+                            if (foundCandidate != null) {
+                                actualCandidatePrimaryKey =
+                                    (foundCandidate.id ?: 1) as Long? // Get the actual Long PK
+                                Log.d("VOTE_SAVE_UI_MAP", "UI Mapping: Found PK $actualCandidatePrimaryKey for Pref $selectedPreferenceNumber in Party $pId")
+                            } else {
+                                // Handle error: Preference number selected but no matching candidate found
+                                Log.e("VOTE_SAVE_UI_MAP", "UI Mapping ERROR: Candidate not found for Pref $selectedPreferenceNumber in Party $pId")
+                                // Show error to user and prevent saving
+                                scope.launch { snackbarHostState.showSnackbar("Грешка: Избраната преференция е невалидна за тази партия.") }
+                                // Reset state and exit confirmation
+                                partyIdToSave = null
+                                preferenceIdToSave = null
+                                return@let // Exit the let block early
+                            }
+                        } else {
+                            // No preference was selected
+                            Log.d("VOTE_SAVE_UI_MAP", "UI Mapping: No preference selected, candidate PK remains null.")
+                            actualCandidatePrimaryKey = null
+                        }
+                        navController.navigate("home") {
+                            // Clear the back stack up to the start destination (usually splash or login)
+                            // This prevents the user from going back to the voting/preview screens.
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true // Remove the start destination itself if needed (e.g., if it's splash)
+                                // Set to false if start destination is login/home and should remain.
+                            }
+                            // Ensure only one instance of the home screen is created
+                            launchSingleTop = true
+                        }
+
+                    }
+                    // Reset stored IDs
+                    partyIdToSave = null
+                    preferenceIdToSave = null
                 },
-                onDismiss = { showConfirmationDialog = false }
+                onDismiss = {
+                    showConfirmationDialog = false
+                    // Reset stored IDs
+                    partyIdToSave = null
+                    preferenceIdToSave = null
+                }
             )
         }
-    }
+    } // End Scaffold
 }
+
 
 // --- Helper Composables ---
 
@@ -344,6 +321,7 @@ fun ConfirmationDialog(
         confirmButton = {
             Button(onClick = onConfirm) {
                 Text("Да")
+
             }
         },
         dismissButton = {

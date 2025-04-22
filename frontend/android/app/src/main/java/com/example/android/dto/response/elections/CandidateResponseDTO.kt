@@ -10,5 +10,6 @@ data class CandidateResponseDTO(
     val electionId: Long,
     val votesCount: Int,
     val imageUri: String?,
-    val position: String?
+    val position: String?,
+//    val partyId: Long?
 )

@@ -5,9 +5,11 @@ import android.util.Log
 // import androidx.activity.result.launch
 import com.example.android.api.VotingApi
 import com.example.android.dao.election.CandidateDao
+import com.example.android.dao.election.CandidateVoteResult
 import com.example.android.dao.election.ElectionDao
 import com.example.android.dao.election.PartyDao
 import com.example.android.dao.election.PartyVoteDao
+import com.example.android.dao.election.PartyVoteResult
 import com.example.android.dao.election.VoteDao
 import com.example.android.dto.response.PagedResponseDTO
 import com.example.android.dto.response.elections.ElectionResponseDTO
@@ -64,12 +66,25 @@ class ElectionsRepository(
     fun getPartyVoteById(id: Long): PartyVoteEntity? = partyVoteDao.getById(id)
 
     // --- Vote (Assuming non-suspend based on original code) ---
-    fun insertVote(vote: VoteEntity) = voteDao.insert(vote)
+    suspend fun insertVote(vote: VoteEntity) = voteDao.insert(vote)
     fun updateVote(vote: VoteEntity) = voteDao.update(vote)
     fun deleteVote(vote: VoteEntity) = voteDao.delete(vote)
     fun getAllVotes(): List<VoteEntity> = voteDao.getAll()
     fun getVoteById(id: Long): VoteEntity? = voteDao.getById(id)
 
+    suspend fun hasUserVoted(userId: Long, electionId: Long): Boolean {
+        return voteDao.hasUserVoted(userId, electionId) > 0
+    }
+
+    suspend fun getPartyResults(electionId: Long): List<PartyVoteResult> {
+        // In a real app, you might want to join this with party names here
+        return voteDao.getPartyVoteCountsWithName(electionId)
+    }
+
+    suspend fun getCandidateResults(electionId: Long): List<CandidateVoteResult> {
+        // In a real app, you might want to join this with candidate names here
+        return voteDao.getCandidateVoteCountsWithName(electionId)
+    }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun fetchAndStoreActiveElections(): Result<List<ElectionEntity>> {

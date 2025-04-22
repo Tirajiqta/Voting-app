@@ -28,7 +28,8 @@ import com.example.compose.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit, onNavigateToVoteElection: () -> Unit) {
+fun HomeScreen(onNavigateToSetting: () -> Unit,     onNavigateToResults: () -> Unit,
+               onNavigateToProfile: () -> Unit, onNavigateToVoteElection: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -97,7 +98,22 @@ fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit,
                     fontSize = 24.sp
                 )
             }
+//            Spacer(Modifier.height(12.dp)) // Add some space
+//            OutlinedButton( // Use OutlinedButton for a different visual style
+//                onClick = { onNavigateToResults() }, // Use the new callback
+//                modifier = Modifier
+//                    .width(220.dp)
+//                    .padding(vertical = 8.dp),
+//                // colors = ButtonDefaults.outlinedButtonColors(...) // Optional styling
+//            ) {
+//                Text(
+//                    "РЕЗУЛТАТИ", // "RESULTS"
+//                    letterSpacing = 4.sp,
+//                    fontSize = 24.sp
+//                )
+//            }
             Spacer(Modifier.height(30.dp))
+
             Text(
                 "Внимание! След натискане\nна бутона не напускайте\nприложението до" +
                         " завършване\nна гласъването, впротивен\nслучай вотът щебъде\nневалиден",
@@ -154,7 +170,8 @@ fun HomeScreen() {
         HomeScreen(
             onNavigateToSetting = {},
             onNavigateToProfile = {},
-            onNavigateToVoteElection = {}
+            onNavigateToVoteElection = {},
+            onNavigateToResults = {}
         )
     }
 

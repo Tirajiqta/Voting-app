@@ -21,6 +21,7 @@ object CandidateMapper {
         electionId = this.electionId,
         votesCount = this.votesCount,
         imageUri = this.imageUri,
-        position = this.position
+        position = this.position,
+        //partyId = this.partyId
     )
 }

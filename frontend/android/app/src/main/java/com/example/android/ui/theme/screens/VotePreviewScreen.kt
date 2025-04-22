@@ -40,7 +40,7 @@ fun VotePreviewScreen(
     // --- Helper functions to find display names from IDs ---
     fun findPartyName(id: Int?): String? = parliamentParties.find { it.id == id }?.name
     fun findCandidateName(partyId: Int?, prefId: Int?): String? =
-        parliamentCandidates.find { it.partyId == partyId && it.id == prefId }?.name
+        parliamentCandidates.find { it.partyId == partyId && it.id.toInt() == prefId }?.name
     fun findPresidentialOptionText(id: Int?): String? = presidentialOptions.find { it.id == id }?.partyName
     fun findReferendumAnswerText(id: Int?): String? = referendumAnswers.find { it.id == id }?.text
     fun findPresidentialNominees(id: Int?): String? = presidentialOptions.find { it.id == id }?.candidates
@@ -244,7 +244,7 @@ fun VotePreviewScreenPreview() {
 
     // Sample data lists needed to display names
     val sampleParties = listOf(Party(8, "Коалиция „ДПС – Ново начало“"))
-    val sampleCandidates = listOf(Candidate(108, "Канд. 8", 8))
+    val sampleCandidates = listOf(Candidate(1, 108, "Канд. 8", 8))
     val samplePresidential = listOf(
         PresidentialPair(1, "ГЕРБ", "Иван Митрополски; Надежда Митева"),
         PresidentialPair(SUPPORT_NOBODY_ID, "Не подкрепям никого", "")
