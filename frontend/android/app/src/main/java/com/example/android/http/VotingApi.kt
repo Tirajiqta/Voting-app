@@ -96,9 +96,7 @@ object VotingApi {
 
     fun listElections(page: Int, size: Int, status: String?, type: String?, callback: Callback<PagedResponseDTO<ElectionResponseDTO>>) {
         val url = buildString {
-            append("$BASE_URL/elections?page=$page&size=$size")
-            status?.let { append("&status=$it") }
-            type?.let { append("&type=$it") }
+            append("$BASE_URL/elections/list-elections")
         }
         ApiClient.get<PagedResponseDTO<ElectionResponseDTO>>(
             url,

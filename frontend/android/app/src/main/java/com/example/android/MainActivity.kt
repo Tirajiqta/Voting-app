@@ -1,28 +1,35 @@
 package com.example.android
 
 import ElectionChoiceScreen
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen
+import androidx.navigation.NavType
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.android.dummymodel.UserProfile
 import com.example.android.ui.theme.screens.HomeScreen
 import com.example.android.ui.theme.screens.LoginScreen
 import com.example.android.ui.theme.screens.ProfileScreen
 import com.example.android.ui.theme.screens.RegisterScreen
 import com.example.android.ui.theme.screens.SplashScreen
+import com.example.android.ui.theme.screens.VotingScreen
+import com.example.android.utils.CurrentUserHolder
 import com.example.compose.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -38,6 +45,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppNavigator() {
     val navController = rememberNavController()
@@ -71,12 +79,29 @@ fun AppNavigator() {
                 onNavigateToVoteElection = {navController.navigate("choose_election")}
             )
         }
-        composable ("choose_election"){
-            ElectionChoiceScreen (
-                onNavigateToVote = { electionName ->
-                    navController.navigate("vote/$electionName")
-                }
-            )
+        composable(
+            route = "vote/{electionId}", // Matches the navigation call
+            arguments = listOf(navArgument("electionId") {
+                type = NavType.LongType
+            })
+        ) { backStackEntry ->
+            val electionId = backStackEntry.arguments?.getLong("electionId")
+            // TODO: Get the actual userId from your authentication state or wherever it's stored
+            val currentUserId =
+                CurrentUserHolder.getCurrentProfile()?.user?.id ?: 1 // Replace with actual user ID retrieval
+
+            if (electionId != null) {
+                VotingScreen(
+                    navController = navController,
+                    electionId = electionId,
+                    userId = currentUserId // Pass the user ID here
+                )
+            } else {
+                // Handle error: ID not found
+                Text("Грешка: Невалиден ID на избор.")
+                // Optionally pop backstack
+                LaunchedEffect (Unit) { navController.popBackStack() }
+            }
         }
 //        composable("settings") {
 //            //SettingsScreen(onNavigateBack = { navController.popBackStack() })
