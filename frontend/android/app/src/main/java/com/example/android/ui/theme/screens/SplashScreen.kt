@@ -27,9 +27,9 @@ fun SplashScreen(navController: NavController) {
 
     LaunchedEffect(Unit) {
         isVisible = true
-        delay(3000) // Wait for 3 seconds
+        delay(3000)
         navController.navigate("login") {
-            popUpTo("splash") { inclusive = true } // Removes Splash from Back Stack
+            popUpTo("splash") { inclusive = true }
         }
     }
 
@@ -41,7 +41,7 @@ fun SplashScreen(navController: NavController) {
         AnimatedVisibility(visible = isVisible) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Image(
-                    painter = painterResource(id = R.drawable.elections), // Your logo image
+                    painter = painterResource(id = R.drawable.elections),
                     contentDescription = "eVote Logo",
                     modifier = Modifier.size(130.dp)
                 )

@@ -48,13 +48,10 @@ import com.example.compose.AppTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ElectionChoiceScreen(
-    // Inject ViewModel
-//    viewModel: ElectionChoiceViewModel = viewModel(),
-    // Navigation callback expects List<Long> (election IDs)
     onNavigateToVote: (selectedElectionIds: List<Long>) -> Unit,
 ) {
     val context = LocalContext.current
-    val appDatabase = remember { AppDatabase.getInstance(context.applicationContext) } // Adjust getInstance if needed
+    val appDatabase = remember { AppDatabase.getInstance(context.applicationContext) }
 
 // Get DAOs from the Room database instance
     val electionDao = appDatabase.electionDao()
@@ -62,7 +59,6 @@ fun ElectionChoiceScreen(
     val partyDao = appDatabase.partyDao()
     val partyVoteDao = appDatabase.partyVoteDao()
     val voteDao = appDatabase.voteDao()
-    // 3. Create the ElectionsRepository instance using the DAOs
     val electionsRepository = remember { ElectionsRepository(
         electionDao = electionDao,
         candidateDao = candidateDao,
@@ -71,24 +67,21 @@ fun ElectionChoiceScreen(
         voteDao = voteDao
     )}
 
-    // 4. Create the ViewModel Factory instance
+    // Create the ViewModel Factory instance
     val electionChoiceViewModelFactory = remember {
         ElectionChoiceViewModelFactory(electionsRepository) // Pass the repository instance
     }
 
-    // --- Get ViewModel using the Factory ---
     val viewModel: ElectionChoiceViewModel = viewModel(
         factory = electionChoiceViewModelFactory // <--- PROVIDE THE FACTORY HERE
     )
 
-    // --- The rest of your Composable code remains the same ---
     val uiState by viewModel.uiState.collectAsState()
     val selectedStates = remember { mutableStateMapOf<Long, Boolean>() }
 
     LaunchedEffect(uiState.elections) {
         selectedStates.clear()
         uiState.elections.forEach { election ->
-            // Use a safe default if ID can be null, though IDs should usually be non-null
             selectedStates[election.id ?: -1L] = false
         }
     }
@@ -99,7 +92,6 @@ fun ElectionChoiceScreen(
 
     LaunchedEffect(uiState.elections, uiState.isLoading) {
         if (!uiState.isLoading && uiState.elections.size == 1) {
-            // Use a safe default if ID can be null
             val singleElectionId = uiState.elections.first().id ?: -1L
             if (singleElectionId != -1L) { // Only navigate if ID is valid
                 onNavigateToVote(listOf(singleElectionId))
@@ -123,42 +115,40 @@ fun ElectionChoiceScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues), // Apply padding from Scaffold
-            contentAlignment = Alignment.Center // Center content (loading/error/list)
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
         ) {
             when {
-                // --- Loading State ---
+                // Loading State
                 uiState.isLoading -> {
                     CircularProgressIndicator()
                 }
-                // --- Error State ---
+                // Error State
                 uiState.error != null -> {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Грешка: ${uiState.error}", // "Error: ..."
+                            text = "Грешка: ${uiState.error}",
                             color = MaterialTheme.colorScheme.error,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(16.dp)
                         )
-                        Button(onClick = { viewModel.loadElections() }) { // Retry button
-                            Text("Опитай пак") // "Try Again"
+                        Button(onClick = { viewModel.loadElections() }) {
+                            Text("Опитай пак")
                         }
                     }
                 }
-                // --- Empty State ---
+                // Empty State
                 uiState.elections.isEmpty() -> {
-                    Text("Няма активни избори в момента.") // "No active elections currently."
+                    Text("Няма активни избори в момента.")
                 }
-                // --- Success State (Multiple Elections) ---
-                // Show selection UI only if loading is done, no error, and more than one election
                 uiState.elections.size > 1 -> {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                            .padding(16.dp), // Apply overall content padding
-                        verticalArrangement = Arrangement.Center, // Center the block vertically
-                        horizontalAlignment = Alignment.CenterHorizontally // Center items horizontally
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
                             "Моля, изберете в кои избори\nжелаете да участвате:",
@@ -168,32 +158,29 @@ fun ElectionChoiceScreen(
                             modifier = Modifier.padding(bottom = 24.dp),
                             color = MaterialTheme.colorScheme.primary
                         )
-                        Column(horizontalAlignment = Alignment.Start) { // Align checkbox rows to start
-                            // Iterate through ElectionDisplayItem from uiState
+                        Column(horizontalAlignment = Alignment.Start) {
                             uiState.elections.forEach { election ->
                                 CheckboxWithLabel(
-                                    label = election.name, // Use name from display item
+                                    label = election.name,
                                     isChecked = selectedStates[election.id] ?: false,
                                     onCheckedChange = { isChecked ->
                                         selectedStates[election.id] = isChecked
                                     }
                                 )
-                                Spacer(modifier = Modifier.height(8.dp)) // Space between checkboxes
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
                         Spacer(modifier = Modifier.height(32.dp))
                         Button(
                             onClick = {
-                                // Filter the map keys where the value is true to get selected IDs
                                 val selectedIds = selectedStates.filter { it.value }.keys.toList()
                                 if (selectedIds.isNotEmpty()) {
-                                    onNavigateToVote(selectedIds) // Pass the list of Long IDs
+                                    onNavigateToVote(selectedIds)
                                 } else {
-                                    // This case should ideally be prevented by the button's enabled state
                                     Toast.makeText(context, "Моля, изберете за какво ще гласувате.", Toast.LENGTH_SHORT).show()
                                 }
                             },
-                            enabled = isProceedEnabled, // Use derived state
+                            enabled = isProceedEnabled,
                             modifier = Modifier
                                 .width(220.dp)
                                 .padding(vertical = 8.dp),
@@ -210,14 +197,9 @@ fun ElectionChoiceScreen(
                         }
                     }
                 }
-                // --- Success State (Single Election) ---
-                // If size is 1, the LaunchedEffect handles navigation.
-                // Optionally show a brief message or keep the loading indicator
-                // until navigation occurs if it's not instant.
-                // A simple Spacer can prevent content shift.
+
                 uiState.elections.size == 1 -> {
-                    // Handled by LaunchedEffect, display nothing or a placeholder/spinner
-                    // CircularProgressIndicator() // Or Text("Preparing your ballot...")
+
                     Spacer(Modifier.fillMaxSize()) // Keep the space occupied
                 }
             }
@@ -225,7 +207,6 @@ fun ElectionChoiceScreen(
     }
 }
 
-// CheckboxWithLabel remains the same as you provided
 @Composable
 fun CheckboxWithLabel(
     label: String,
@@ -235,32 +216,26 @@ fun CheckboxWithLabel(
 ) {
     Row (
         modifier = modifier
-            .fillMaxWidth() // Allow row to take width for better alignment if needed
-            .clickable { onCheckedChange(!isChecked) } // Make row clickable
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!isChecked) }
             .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Checkbox(
             checked = isChecked,
-            onCheckedChange = onCheckedChange // Allow direct checkbox click too
+            onCheckedChange = onCheckedChange
         )
         Spacer(modifier = Modifier.width(8.dp))
         Text(text = label, fontSize = 16.sp)
     }
 }
 
-// --- Previews ---
-// Previews need adjustment as the screen now relies on ViewModel state.
-// You might need a fake ViewModel or pass state directly for previews.
 
 @Preview(showBackground = true, name = "Selection Screen - Loading")
 @Composable
 fun ElectionSelectionScreenLoadingPreview() {
     AppTheme {
-        // Simulate loading state for preview
         val loadingState = ElectionChoiceUiState(isLoading = true)
-        // Provide a dummy ViewModel or directly use state in preview composable
-        // For simplicity, let's create a temporary composable for preview
         PreviewableElectionChoiceScreen(uiState = loadingState)
     }
 }
@@ -302,14 +277,12 @@ fun ElectionSelectionScreenNonePreview() {
 }
 
 
-// Helper Composable for Previewing with State (avoids needing ViewModel instance)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PreviewableElectionChoiceScreen(
     uiState: ElectionChoiceUiState,
     onNavigateToVote: (List<Long>) -> Unit = {} // Dummy action
 ) {
-    // Re-implement the core UI logic using the provided uiState
     val context = LocalContext.current
     val selectedStates = remember { mutableStateMapOf<Long, Boolean>() }
     LaunchedEffect (uiState.elections) {
@@ -363,7 +336,6 @@ private fun PreviewableElectionChoiceScreen(
                         }
                     }
                 }
-                // Handle single election case if needed for preview visualization
                 uiState.elections.size == 1 -> {
                     Text("Пренасочване към избори: ${uiState.elections.first().name}") // Simulate auto-nav message
                 }

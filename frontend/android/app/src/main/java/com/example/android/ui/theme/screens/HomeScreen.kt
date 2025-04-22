@@ -46,9 +46,7 @@ fun HomeScreen(onNavigateToSetting: () -> Unit,     onNavigateToResults: () -> U
                     IconButton(onClick = { onNavigateToProfile() }) {
                         Icon(Icons.Default.Person, contentDescription = "Profile")
                     }
-//                    IconButton(onClick = { onNavigateToSetting() }) {
-//                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-//                    }
+
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -69,7 +67,7 @@ fun HomeScreen(onNavigateToSetting: () -> Unit,     onNavigateToResults: () -> U
         ) {
             //Spacer(Modifier.height(100.dp))
             Image(
-                painter = painterResource(id = R.drawable.voting), // Your logo image
+                painter = painterResource(id = R.drawable.voting),
                 contentDescription = "eVote Logo",
                 modifier = Modifier.size(130.dp)
             )
@@ -98,20 +96,7 @@ fun HomeScreen(onNavigateToSetting: () -> Unit,     onNavigateToResults: () -> U
                     fontSize = 24.sp
                 )
             }
-//            Spacer(Modifier.height(12.dp)) // Add some space
-//            OutlinedButton( // Use OutlinedButton for a different visual style
-//                onClick = { onNavigateToResults() }, // Use the new callback
-//                modifier = Modifier
-//                    .width(220.dp)
-//                    .padding(vertical = 8.dp),
-//                // colors = ButtonDefaults.outlinedButtonColors(...) // Optional styling
-//            ) {
-//                Text(
-//                    "РЕЗУЛТАТИ", // "RESULTS"
-//                    letterSpacing = 4.sp,
-//                    fontSize = 24.sp
-//                )
-//            }
+
             Spacer(Modifier.height(30.dp))
 
             Text(
@@ -124,18 +109,17 @@ fun HomeScreen(onNavigateToSetting: () -> Unit,     onNavigateToResults: () -> U
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
+            Spacer(Modifier.height(40.dp))
 
-//            ElectionCard(
-//                title = "Presidential Election",
-//                description = "Vote for the next president of the country.",
-//                // Pass a lambda that calls the main navigation lambda with a specific ID
-//                onClick = { onNavigateToVoteElection("presidential") }
-//            )
-//            ElectionCard(
-//                title = "Local Government Election",
-//                description = "Choose your local representatives.",
-//                onClick = { onNavigateToVoteElection("local") }
-//            )
+            Button(onClick = {
+                Runtime.getRuntime().exit(0) },
+
+            ) {
+                Text(
+                    "Изход",
+                    fontSize = 20.sp
+                )
+            }
         }
     }
 
@@ -152,7 +136,7 @@ fun ElectionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 4.dp), // Adjusted padding slightly
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {

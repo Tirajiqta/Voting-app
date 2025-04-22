@@ -27,21 +27,20 @@ import com.example.compose.AppTheme // Import your theme
 
 //Screen for EU parliament, BG parliament, local council
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class) // Added ExperimentalLayoutApi for FlowRow
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ParliamentVoteScreen(
     electionTitle: String = "Избори за народно събрание",
     electionDate: String = "27.10.2024",
     parties: List<Party>,
-    candidates: List<Candidate>, // Pass all candidates, we'll filter later
+    candidates: List<Candidate>,
     onNavigateBack: () -> Unit,
-    onReviewVote: (selectedPartyId: Int, selectedPreferenceId: Long?) -> Unit // Pass selected IDs
+    onReviewVote: (selectedPartyId: Int, selectedPreferenceId: Long?) -> Unit
 ) {
     // --- State ---
     var selectedPartyId by remember { mutableStateOf<Int?>(null) }
     var selectedPreferenceId by remember { mutableStateOf<Long?>(null) }
 
-    // Filter candidates only when the selected party changes
     val currentPartyCandidates by remember(selectedPartyId) {
         derivedStateOf {
             if (selectedPartyId == null) emptyList() else candidates.filter { it.partyId == selectedPartyId }
@@ -73,8 +72,7 @@ fun ParliamentVoteScreen(
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         bottomBar = {
-            // Button placed in bottom bar for consistent position
-            Column( // Use column to add padding easily
+            Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -84,7 +82,7 @@ fun ParliamentVoteScreen(
                             onReviewVote(partyId, selectedPreferenceId)
                         }
                     },
-                    enabled = selectedPartyId != null, // Enabled only when a party is selected
+                    enabled = selectedPartyId != null,
                     modifier = Modifier.width(200.dp)
                 ) {
                     Text(
@@ -98,9 +96,9 @@ fun ParliamentVoteScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Apply padding from Scaffold
-                .padding(horizontal = 16.dp), // Horizontal padding for list content
-            contentPadding = PaddingValues(bottom = 16.dp) // Padding at the bottom of the list itself
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 16.dp)
         ) {
             // --- Header ---
             item {
@@ -129,7 +127,6 @@ fun ParliamentVoteScreen(
                 }
             }
 
-            // --- Party List ---
             items(parties, key = { it.id }) { party ->
                 val isSelected = party.id == selectedPartyId
                 PartyItem(
@@ -137,11 +134,9 @@ fun ParliamentVoteScreen(
                     isSelected = isSelected,
                     onSelected = {
                         selectedPartyId = party.id
-                        // Preference is reset via LaunchedEffect
                     }
                 )
 
-                // --- Preference Selection (Conditional) ---
                 if (isSelected) {
                     PreferenceSelection(
                         candidates = currentPartyCandidates,
@@ -157,7 +152,6 @@ fun ParliamentVoteScreen(
     }
 }
 
-// --- Composable for a single Party Item ---
 @Composable
 fun PartyItem(
     party: Party,
@@ -166,13 +160,13 @@ fun PartyItem(
 ) {
     val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) else Color.Transparent
     val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-    val shape = RoundedCornerShape(4.dp) // Slight rounding for the item
+    val shape = RoundedCornerShape(4.dp)
 
     Spacer(Modifier.height(10.dp))
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape) // Clip for background and border consistency
+            .clip(shape)
             .border(1.dp, borderColor, shape)
             .background(backgroundColor, shape)
             .clickable { onSelected() }
@@ -187,59 +181,52 @@ fun PartyItem(
             contentAlignment = Alignment.Center
         ) {
             if (isSelected) {
-                // Display "X" when this PartyItem is selected
+
                 Text(
                     text = "X",
-                    fontSize = 28.sp, // Adjust size to fit the 32dp box well
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.ExtraBold,
-                    color = MaterialTheme.colorScheme.primary, // Use a distinct color for the X
+                    color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
-                    // No y-offset usually needed with Alignment.Center
                 )
             } else {
-                // Display the party ID number when not selected
                 Text(
                     text = party.id.toString(),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
-                    // You might want to ensure text color contrasts with potential faint background
-                    // color = LocalContentColor.current
+
                 )
             }
         }
         Spacer(modifier = Modifier.width(12.dp))
-        // Party Name
         Text(
             text = party.name,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f) // Take remaining space
+            modifier = Modifier.weight(1f)
         )
-        // Optional: Add an indicator for selection if needed (e.g., RadioButton visual)
     }
 }
 
-// --- Composable for the Preference Selection Area ---
-@OptIn(ExperimentalLayoutApi::class) // For FlowRow
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PreferenceSelection(
     candidates: List<Candidate>,
     selectedPreferenceId: Long?,
-    onPreferenceSelected: (candidateId: Long?) -> Unit // Allow deselecting preference maybe? Or pass null initially
+    onPreferenceSelected: (candidateId: Long?) -> Unit
 ) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 16.dp, start = 8.dp, end = 8.dp) // Padding around the section
+            .padding(top = 8.dp, bottom = 16.dp, start = 8.dp, end = 8.dp)
     ) {
         Text(
             text = "Предпочитание (Преференция)",
             style = MaterialTheme.typography.labelLarge,
             modifier = Modifier.padding(bottom = 8.dp)
         )
-        // Use FlowRow for wrapping layout
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start), // Spacing between circles
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.Start),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             candidates.forEach { candidate ->
@@ -247,22 +234,17 @@ fun PreferenceSelection(
                     candidateId = candidate.id.toInt(),
                     isSelected = candidate.id == selectedPreferenceId,
                     onSelected = {
-                        // Allow selecting or deselecting preference by clicking again
                         val newSelection = if (candidate.id == selectedPreferenceId) null else candidate.id
                         onPreferenceSelected(newSelection)
-                        // If you strictly want only ONE selection always (no deselect), use:
-                        // onPreferenceSelected(candidate.id)
                     }
 
                 )
             }
         }
-        //Divider()
 
     }
 }
 
-// --- Composable for a single Preference Circle ---
 @Composable
 fun PreferenceCircle(
     candidateId: Int,
@@ -274,7 +256,7 @@ fun PreferenceCircle(
 
     Box(
         modifier = Modifier
-            .size(38.dp) // Size of the circle area
+            .size(38.dp)
             .clip(CircleShape)
             .border(1.5.dp, borderColor, CircleShape)
             .background(backgroundColor, CircleShape)
@@ -287,23 +269,20 @@ fun PreferenceCircle(
             textAlign = TextAlign.Center,
             color = if (isSelected) MaterialTheme.colorScheme.primary else LocalContentColor.current
         )
-        // Overlay "X" if selected
         if (isSelected) {
-            // Simple Text "X" overlay
             Text(
                 text = "X",
-                fontSize = 28.sp, // Make X prominent
+                fontSize = 28.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.offset(y = (-1).dp) // Fine-tune X position if needed
+                modifier = Modifier.offset(y = (-1).dp)
             )
         }
     }
 }
 
 
-// --- Previews ---
 @Preview(showBackground = true, widthDp = 380)
 @Composable
 fun ParliamentVoteScreenPreview() {

@@ -29,23 +29,18 @@ import com.example.android.ui.theme.viewmodels.ResultsUiState
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResultsScreen(
-    electionId: Long, // Assumes electionId is passed via navigation arguments
+    electionId: Long,
     onNavigateBack: () -> Unit
 ) {
-    // --- ViewModel Setup ---
-    // Provides the data (ResultsUiState) for this screen.
-    // Uses a factory to inject dependencies (Repository, SavedStateHandle).
     val context = LocalContext.current
     val appDatabase = remember { AppDatabase.getInstance(context.applicationContext) }
 
-    // Instantiate all DAOs required by ElectionsRepository
     val voteDao = appDatabase.voteDao()
     val electionDao = appDatabase.electionDao()
     val candidateDao = appDatabase.candidateDao()
     val partyDao = appDatabase.partyDao()
     val partyVoteDao = appDatabase.partyVoteDao()
 
-    // Create the Repository instance
     val electionsRepository = remember {
         ElectionsRepository(
             voteDao = voteDao,
@@ -53,53 +48,44 @@ fun ResultsScreen(
             candidateDao = candidateDao,
             partyDao = partyDao,
             partyVoteDao = partyVoteDao
-            // Add other DAOs if the Repository constructor needs them
         )
     }
 
-    // Create SavedStateHandle to pass the electionId to the ViewModel
     val savedStateHandle = remember { SavedStateHandle(mapOf("electionId" to electionId)) }
 
-    // Instantiate the ViewModel using its factory
     val viewModel: ResultsViewModel = viewModel(
         factory = ResultsViewModelFactory(electionsRepository, savedStateHandle)
     )
 
-    // Collect the UI state from the ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
-    // --- Screen Structure ---
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(uiState.electionName) }, // Display dynamic election name
+                title = { Text(uiState.electionName) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Назад") // Back button
+                        Icon(Icons.Filled.ArrowBack, contentDescription = "Назад")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest // Theme color
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
                 )
             )
         },
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest // Background color
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues), // Apply padding from Scaffold
-            contentAlignment = Alignment.Center // Center loading/error states
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
         ) {
-            // Handle different UI states: Loading, Error, Empty, Content
             when {
-                // Show loading indicator while data is being fetched
                 uiState.isLoading -> CircularProgressIndicator()
 
-                // Show error message if loading failed
                 uiState.error != null -> ErrorDisplay(uiState.error)
 
-                // Show message if loading finished but no results were found
                 !uiState.isLoading && uiState.partyResults.isEmpty() && uiState.candidateResults.isEmpty() -> {
                     Text(
                         "Няма налични резултати за този избор.",
@@ -108,8 +94,6 @@ fun ResultsScreen(
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
-
-                // Otherwise, display the main content with results lists
                 else -> ResultsContent(uiState)
             }
         }

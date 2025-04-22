@@ -77,7 +77,6 @@ fun VotingScreen( // This is the wrapper/container composable
             scope.launch {
                 snackbarHostState.showSnackbar("Гласът е запазен успешно!")
             }
-            // navController.popBackStack() // <<< REMOVE THIS LINE >>>
         }
     }
 
@@ -93,13 +92,11 @@ fun VotingScreen( // This is the wrapper/container composable
     // --- UI ---
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) }
-        // TopBar and BottomBar are now handled *inside* ParliamentVoteScreen
-    ) { paddingValues -> // Padding from Scaffold is passed down
+    ) { paddingValues ->
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-            // Apply padding from Scaffold if ParliamentVoteScreen doesn't handle it internally
                 .padding(paddingValues)
         ) {
             when {
@@ -135,11 +132,10 @@ fun VotingScreen( // This is the wrapper/container composable
                             preferenceIdToSave = selectedPreferenceId
                             showConfirmationDialog = true
                         }
-                        // Note: ParliamentVoteScreen handles its own Scaffold, Top/Bottom bars
                     )
 
                     // Overlay loading indicator when saving vote
-                    if (uiState.isLoading && !uiState.parties.isEmpty()) { // Show saving indicator only after initial load
+                    if (uiState.isLoading && !uiState.parties.isEmpty()) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -150,10 +146,10 @@ fun VotingScreen( // This is the wrapper/container composable
                         }
                     }
                 }
-            } // End When
-        } // End Box
+            }
+        }
 
-        // --- Confirmation Dialog (Remains the same, triggered differently) ---
+        //Confirmation Dialog (Remains the same, triggered differently)
         if (showConfirmationDialog) {
             ConfirmationDialog(
                 onConfirm = {
@@ -162,13 +158,9 @@ fun VotingScreen( // This is the wrapper/container composable
                     partyIdToSave?.let { pId -> // pId is the Party's Int ID from UI
                         val selectedPreferenceNumber = preferenceIdToSave // The Int preference number
 
-                        // --- <<< TEMPORARY LOOKUP LOGIC STARTS HERE >>> ---
                         var actualCandidatePrimaryKey: Long? = null
                         if (selectedPreferenceNumber != null) {
-                            // Find the candidate in the current UI state's list
-                            // NOTE: This relies on uiState.candidates being up-to-date and correct
                             val foundCandidate = uiState.candidates.firstOrNull { candidate ->
-                                // Match the Party Int ID AND the Preference Number
                                 candidate.partyId == pId && candidate.preferenceNumber.toLong() == selectedPreferenceNumber
                             }
 
@@ -177,49 +169,39 @@ fun VotingScreen( // This is the wrapper/container composable
                                     (foundCandidate.id ?: 1) as Long? // Get the actual Long PK
                                 Log.d("VOTE_SAVE_UI_MAP", "UI Mapping: Found PK $actualCandidatePrimaryKey for Pref $selectedPreferenceNumber in Party $pId")
                             } else {
-                                // Handle error: Preference number selected but no matching candidate found
                                 Log.e("VOTE_SAVE_UI_MAP", "UI Mapping ERROR: Candidate not found for Pref $selectedPreferenceNumber in Party $pId")
-                                // Show error to user and prevent saving
                                 scope.launch { snackbarHostState.showSnackbar("Грешка: Избраната преференция е невалидна за тази партия.") }
-                                // Reset state and exit confirmation
                                 partyIdToSave = null
                                 preferenceIdToSave = null
-                                return@let // Exit the let block early
+                                return@let
                             }
                         } else {
-                            // No preference was selected
                             Log.d("VOTE_SAVE_UI_MAP", "UI Mapping: No preference selected, candidate PK remains null.")
                             actualCandidatePrimaryKey = null
                         }
                         navController.navigate("home") {
-                            // Clear the back stack up to the start destination (usually splash or login)
-                            // This prevents the user from going back to the voting/preview screens.
                             popUpTo(navController.graph.startDestinationId) {
-                                inclusive = true // Remove the start destination itself if needed (e.g., if it's splash)
-                                // Set to false if start destination is login/home and should remain.
+                                inclusive = true
                             }
-                            // Ensure only one instance of the home screen is created
                             launchSingleTop = true
                         }
 
                     }
-                    // Reset stored IDs
                     partyIdToSave = null
                     preferenceIdToSave = null
                 },
                 onDismiss = {
                     showConfirmationDialog = false
-                    // Reset stored IDs
                     partyIdToSave = null
                     preferenceIdToSave = null
                 }
             )
         }
-    } // End Scaffold
+    }
 }
 
 
-// --- Helper Composables ---
+
 
 @Composable
 fun PartyItem(
@@ -267,40 +249,38 @@ fun PreferenceItem(
 
     Box(
         modifier = Modifier
-            .size(48.dp) // Size of the circle
+            .size(48.dp)
             .clip(CircleShape)
             .background(if (isSelected) selectedColor else Color.Transparent)
             .border(
                 width = 1.5.dp,
-                color = if (isSelected) selectedColor else normalBorderColor, // Border same as background when selected
+                color = if (isSelected) selectedColor else normalBorderColor,
                 shape = CircleShape
             )
             .clickable(onClick = onPreferenceClick),
         contentAlignment = Alignment.Center
     ) {
-        // Draw 'X' if selected
         if (isSelected) {
             Text(
-                text = "X", // Simple X, consider using an Icon if needed
+                text = "X",
                 color = selectedContentColor,
-                fontSize = 20.sp, // Adjust size as needed
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.offset(y = (-1).dp) // Slight offset correction if needed
+                modifier = Modifier.offset(y = (-1).dp)
             )
-            Text( // Overlay number slightly less prominently
+            Text(
                 text = "${candidate.preferenceNumber}",
-                color = selectedContentColor.copy(alpha = 0.7f), // Make number slightly transparent
-                fontSize = 10.sp, // Smaller font for number under X
+                color = selectedContentColor.copy(alpha = 0.7f),
+                fontSize = 10.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp) // Position at bottom
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp)
             )
         } else {
-            // Show only number if not selected
             Text(
                 text = "${candidate.preferenceNumber}",
                 color = LocalContentColor.current,
-                fontSize = 14.sp, // Normal number size
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )

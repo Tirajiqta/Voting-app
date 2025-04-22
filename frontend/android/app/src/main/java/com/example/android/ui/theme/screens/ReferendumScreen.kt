@@ -21,23 +21,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.android.dummymodel.ReferendumAnswer // Import your data class
-import com.example.compose.AppTheme // Import your theme
+import com.example.android.dummymodel.ReferendumAnswer
+import com.example.compose.AppTheme
 
 // Referendum screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReferendumScreen(
-    referendumQuestion: String, // The main question being asked
-    answers: List<ReferendumAnswer>, // The possible answers (e.g., Yes, No)
+    referendumQuestion: String,
+    answers: List<ReferendumAnswer>,
     onNavigateBack: () -> Unit,
-    onReviewVote: (selectedAnswerId: Int) -> Unit // Pass the ID of the selected answer
+    onReviewVote: (selectedAnswerId: Int) -> Unit
 ) {
-    // --- State ---
     var selectedAnswerId by remember { mutableStateOf<Int?>(null) }
 
-    // --- UI ---
     Scaffold(
         topBar = {
             TopAppBar(
@@ -66,10 +64,10 @@ fun ReferendumScreen(
                             onReviewVote(answerId)
                         }
                     },
-                    enabled = selectedAnswerId != null, // Enabled only when an answer is selected
+                    enabled = selectedAnswerId != null,
                     modifier = Modifier.width(200.dp)
                 ) {
-                    Text("ПРЕГЛЕД", fontSize = 16.sp) // "REVIEW"
+                    Text("ПРЕГЛЕД", fontSize = 16.sp)
                 }
             }
         }
@@ -77,25 +75,24 @@ fun ReferendumScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Apply padding from Scaffold
-                .padding(horizontal = 16.dp), // Horizontal padding for list content
-            contentPadding = PaddingValues(vertical = 16.dp), // Padding top/bottom of list
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.Center
         ) {
-            // --- Referendum Question ---
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxSize()
-                        .padding(bottom = 24.dp), // Space below question
+                        .padding(bottom = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
                     //Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = referendumQuestion,
-                        style = MaterialTheme.typography.headlineSmall, // Style for the question
+                        style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Justify,
                         fontWeight = FontWeight.Bold
                     )
@@ -114,16 +111,13 @@ fun ReferendumScreen(
                         selectedAnswerId = answer.id
                     }
                 )
-                // Add spacing between answer items
                 Spacer(modifier = Modifier.height(8.dp))
-                // Optional: Add Divider if needed
                 // Divider()
             }
         }
     }
 }
 
-// --- Composable for a single Answer Item ---
 @Composable
 fun ReferendumAnswerItem(
     answer: ReferendumAnswer,
@@ -142,44 +136,40 @@ fun ReferendumAnswerItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape) // Clip the whole row
-            .border(1.dp, borderColor, shape) // Border around the whole row based on selection
-            .background(backgroundColor, shape) // Background for the whole row based on selection
+            .clip(shape)
+            .border(1.dp, borderColor, shape)
+            .background(backgroundColor, shape)
             .clickable { onSelected() }
-            .padding(vertical = 12.dp, horizontal = 10.dp), // Adjust padding
+            .padding(vertical = 12.dp, horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Selection Box (displays 'X' when selected)
         Box(
             modifier = Modifier
-                .size(32.dp) // The square box for the X
+                .size(32.dp)
                 .border(1.5.dp, selectionBoxBorderColor, selectionBoxShape),
             contentAlignment = Alignment.Center
         ) {
-            // --- Display "X" if selected ---
             if (isSelected) {
                 Text(
                     text = "X",
-                    fontSize = 28.sp, // Adjust size as needed
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.Center
                 )
             }
-            // --- Else: Box is empty ---
         }
         Spacer(modifier = Modifier.width(12.dp))
-        // Answer Text
         Text(
             text = answer.text,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f) // Take remaining space
+            modifier = Modifier.weight(1f)
         )
     }
 }
 
 
-// --- Previews ---
 @Preview(showBackground = true, widthDp = 380)
 @Composable
 fun ReferendumScreenPreview() {

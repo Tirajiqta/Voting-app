@@ -20,24 +20,18 @@ import com.example.compose.AppTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VotePreviewScreen(
-    voteSummary: VoteSelectionSummary, // Contains the IDs selected by the user
-    // --- Data needed to display names/text for the selections ---
-    // Pass only the relevant lists based on which elections were active
+    voteSummary: VoteSelectionSummary,
     parliamentParties: List<Party> = emptyList(),
     parliamentCandidates: List<Candidate> = emptyList(),
     presidentialOptions: List<PresidentialPair> = emptyList(),
     referendumAnswers: List<ReferendumAnswer> = emptyList(),
-    // Add lists for other potential elections (local, EU, etc.)
-    // --- Callbacks ---
-    onClearAndRestart: () -> Unit, // Action to clear votes and go back
-    onConfirmVote: () -> Unit,    // Action to submit the vote
-    onNavigateBack: () -> Unit     // Simple back navigation (e.g., to previous vote screen)
+    onClearAndRestart: () -> Unit,
+    onConfirmVote: () -> Unit,
+    onNavigateBack: () -> Unit
 ) {
-    // --- State for potential loading/error during submission ---
     var isSubmitting by remember { mutableStateOf(false) }
     var submissionError by remember { mutableStateOf<String?>(null) }
 
-    // --- Helper functions to find display names from IDs ---
     fun findPartyName(id: Int?): String? = parliamentParties.find { it.id == id }?.name
     fun findCandidateName(partyId: Int?, prefId: Int?): String? =
         parliamentCandidates.find { it.partyId == partyId && it.id.toInt() == prefId }?.name
@@ -65,33 +59,28 @@ fun VotePreviewScreen(
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         bottomBar = {
-            // Buttons at the bottom
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceAround, // Space out buttons
+                horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Clear Button
                 OutlinedButton(
                     onClick = onClearAndRestart,
-                    enabled = !isSubmitting, // Disable during submit
+                    enabled = !isSubmitting,
                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                 ) {
-                    Text("Изчисти") // "Clear"
+                    Text("Изчисти")
                 }
-                // Vote Button
                 Button(
                     onClick = {
-                        isSubmitting = true // Show loading indicator
-                        submissionError = null // Clear previous errors
-                        // In a real app, call ViewModel here which handles DB interaction
-                        // For now, just call the callback
+                        isSubmitting = true
+                        submissionError = null
                         onConfirmVote()
-                        // isSubmitting = false would typically happen in the callback's result handling
                     },
-                    enabled = !isSubmitting, // Disable during submit
+                    enabled = !isSubmitting,
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
                 ) {
                     if (isSubmitting) {
@@ -101,7 +90,7 @@ fun VotePreviewScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("ГЛАСУВАЙ", fontSize = 16.sp) // "VOTE"
+                        Text("ГЛАСУВАЙ", fontSize = 16.sp)
                     }
                 }
             }
@@ -110,11 +99,10 @@ fun VotePreviewScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Apply padding from Scaffold
+                .padding(paddingValues)
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-            // Display error message if submission failed
             item {
                 if (submissionError != null) {
                     Text(
@@ -125,7 +113,6 @@ fun VotePreviewScreen(
                 }
             }
 
-            // --- Parliament Selection Summary ---
             if (voteSummary.parliamentPartyId != null) {
                 item {
                     SelectionSummaryCard(title = "Парламентарни избори") {
@@ -143,10 +130,9 @@ fun VotePreviewScreen(
                 }
             }
 
-            // --- Presidential Selection Summary ---
             if (voteSummary.presidentialOptionId != null) {
                 item {
-                    SelectionSummaryCard(title = "Избори за Президент и Вицепрезидент") { // Or dynamic title
+                    SelectionSummaryCard(title = "Избори за Президент и Вицепрезидент") {
                         val optionText = findPresidentialOptionText(voteSummary.presidentialOptionId) ?: "Неизвестен избор"
                         SelectionDetailRow("Избран вариант:", optionText)
 
@@ -163,10 +149,9 @@ fun VotePreviewScreen(
                 }
             }
 
-            // --- Referendum Selection Summary ---
             if (voteSummary.referendumAnswerId != null) {
                 item {
-                    SelectionSummaryCard(title = "Референдум") { // Or dynamic title
+                    SelectionSummaryCard(title = "Референдум") {
                         val answerText = findReferendumAnswerText(voteSummary.referendumAnswerId) ?: "Неизвестен избор"
                         SelectionDetailRow("Вашият отговор:", answerText)
                     }
@@ -174,14 +159,10 @@ fun VotePreviewScreen(
                 }
             }
 
-            // --- Add summaries for other election types here ---
-            // e.g., Local, EU, etc., following the same pattern
-
         }
     }
 }
 
-// --- Helper Composables for structured display ---
 
 @Composable
 fun SelectionSummaryCard(
@@ -203,7 +184,6 @@ fun SelectionSummaryCard(
             )
             Divider()
             Spacer(modifier = Modifier.height(8.dp))
-            // Inject the specific details content here
             content()
         }
     }
@@ -226,15 +206,13 @@ fun SelectionDetailRow(label: String, value: String) {
             fontSize = 16.sp
         )
     }
-    Spacer(modifier = Modifier.height(4.dp)) // Small space between detail rows
+    Spacer(modifier = Modifier.height(4.dp))
 }
 
 
-// --- Preview ---
 @Preview(showBackground = true, widthDp = 380)
 @Composable
 fun VotePreviewScreenPreview() {
-    // Sample data for preview - mimic a combined election scenario
     val previewSummary = VoteSelectionSummary(
         parliamentPartyId = 8,
         parliamentPreferenceId = 108,
@@ -242,7 +220,6 @@ fun VotePreviewScreenPreview() {
         referendumAnswerId = 1
     )
 
-    // Sample data lists needed to display names
     val sampleParties = listOf(Party(8, "Коалиция „ДПС – Ново начало“"))
     val sampleCandidates = listOf(Candidate(1, 108, "Канд. 8", 8))
     val samplePresidential = listOf(

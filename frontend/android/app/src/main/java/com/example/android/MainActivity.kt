@@ -52,6 +52,7 @@ import com.example.android.ui.theme.screens.ProfileScreen
 import com.example.android.ui.theme.screens.RegisterScreen
 import com.example.android.ui.theme.screens.SplashScreen
 import com.example.android.ui.theme.screens.VotingScreen
+import com.example.android.ui.theme.screens.VotePreviewScreen
 import com.example.android.utils.CurrentUserHolder
 import com.example.compose.AppTheme
 
@@ -89,7 +90,6 @@ class MainActivity : ComponentActivity() {
     ){ isGranted: Boolean ->
         if (isGranted) {
             Log.i("PERMISSION", "POST_NOTIFICATIONS permission granted after request.")
-            // Permission granted, now we can show the notification
             if (ActivityCompat.checkSelfPermission(
                     this,
                     Manifest.permission.POST_NOTIFICATIONS
@@ -100,8 +100,6 @@ class MainActivity : ComponentActivity() {
             }
         } else {
             Log.w("PERMISSION", "POST_NOTIFICATIONS permission denied.")
-            // Handle the case where the user denies the permission
-            // Maybe show a message explaining why notifications are useful
         }
     }
 
@@ -117,34 +115,25 @@ class MainActivity : ComponentActivity() {
                     sendNotification()
                 }
                 shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
-                    // Optionally show an explanation dialog/snackbar to the user
                     Log.w("PERMISSION", "Showing rationale for POST_NOTIFICATIONS (or requesting directly).")
-                    // Then request
                     requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    // showRationaleDialog { requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }
                 }
                 else -> {
-                    // Request permission directly
                     Log.i("PERMISSION", "Requesting POST_NOTIFICATIONS permission.")
                     requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                 }
             }
         } else {
-            // No runtime permission needed for older versions
             sendNotification()
         }
     }
 
-    // --- Send Simulated Notification Function ---
     @RequiresPermission(Manifest.permission.POST_NOTIFICATIONS)
     private fun sendNotification() {
         val context: Context = this
 
-        // Intent to open MainActivity when notification is tapped
         val intent = Intent(context, MainActivity::class.java).apply {
-            // Flags to reset the task stack and bring MainActivity to front
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            // You could add extras here if needed for handling the tap
             putExtra("notification_action", "simulated_launch")
         }
         val pendingIntentFlag = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -154,7 +143,6 @@ class MainActivity : ComponentActivity() {
         }
         val pendingIntent = PendingIntent.getActivity(context, 0, intent, pendingIntentFlag)
 
-        // Build the notification
         val notificationTitle = "Симулация: Избори Наближават!"
         val notificationBody = "Това е тестово известие. Изборите 'Демо Избори 2024' започват скоро."
 
@@ -167,18 +155,14 @@ class MainActivity : ComponentActivity() {
             .setContentIntent(pendingIntent) // Intent to launch on tap
             .setAutoCancel(true) // Dismiss notification on tap
 
-        // Get Notification Manager
         val notificationManager = NotificationManagerCompat.from(context)
 
-        // --- IMPORTANT: Check permission AGAIN before notifying ---
-        // This covers the case where the notification is triggered but permission is somehow missing
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED &&
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Log.w("NOTIFICATION_SIM", "Cannot send notification - POST_NOTIFICATIONS permission not granted.")
             return // Exit if permission not granted on Android 13+
         }
 
-        // --- Show the notification ---
         notificationManager.notify(1, builder.build())
         Log.i("NOTIFICATION_SIM", "Simulated notification sent.")
     }
@@ -218,8 +202,6 @@ fun AppNavigator() {
                 onNavigateToProfile = { navController.navigate("profile") },
                 onNavigateToVoteElection = {navController.navigate("choose_election")},
                 onNavigateToResults = {
-                    // Provide an actual election ID here.
-                    // Using '1' for testing. Replace with dynamic selection later.
                     val electionIdForResults = 1L
                     navController.navigate("results/$electionIdForResults")
                 }
@@ -241,22 +223,17 @@ fun AppNavigator() {
             }
         }
         composable("choose_election") {
-            ElectionChoiceScreen ( // Use the screen from the first prompt
-                // This is the callback from ElectionChoiceScreen
+            ElectionChoiceScreen (
                 onNavigateToVote = { selectedIds -> // Receives List<Long>
                     if (selectedIds.isNotEmpty()) {
-                        // Navigate using only the first ID
                         val firstId = selectedIds.first()
-                        // Navigate to the specific vote screen
                         navController.navigate("vote/$firstId")
                     }
-                    // Optional: Handle the case where the list might be empty,
-                    // though the ElectionChoiceScreen button logic should prevent this.
                 }
             )
         }
         composable(
-            route = "vote/{electionId}", // Matches the navigation call
+            route = "vote/{electionId}",
             arguments = listOf(navArgument("electionId") {
                 type = NavType.LongType
             })
@@ -264,24 +241,22 @@ fun AppNavigator() {
             val electionId = backStackEntry.arguments?.getLong("electionId")
             // TODO: Get the actual userId from your authentication state or wherever it's stored
             val currentUserId =
-                CurrentUserHolder.getCurrentProfile()?.user?.id ?: 1 // Replace with actual user ID retrieval
+                CurrentUserHolder.getCurrentProfile()?.user?.id ?: 1
 
             if (electionId != null) {
                 VotingScreen(
                     navController = navController,
                     electionId = electionId,
-                    userId = currentUserId // Pass the user ID here
+                    userId = currentUserId
                 )
             } else {
-                // Handle error: ID not found
                 Text("Грешка: Невалиден ID на избор.")
-                // Optionally pop backstack
                 LaunchedEffect (Unit) { navController.popBackStack() }
             }
         }
-//        composable("settings") {
-//            //SettingsScreen(onNavigateBack = { navController.popBackStack() })
-//        }
+
+
+
         composable("profile") {
                 val user = CurrentUserHolder.getCurrentProfile()?.user
                 val placeholderProfile = UserProfile(
@@ -298,16 +273,6 @@ fun AppNavigator() {
                 }
             )
         }
-        /*composable(
-            route = "vote/{electionId}",
-            arguments = listOf(navArgument("electionId") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val electionId = backStackEntry.arguments?.getString("electionId")
-            VoteScreen(
-                electionId = electionId ?: "Unknown", // Handle null case
-                onNavigateBack = { navController.popBackStack() }
-            ) // Example
-        }*/
         @Composable
         fun ResultsScreenPlaceholder(onNavigateBack: () -> Unit) {
             Scaffold(

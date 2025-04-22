@@ -44,7 +44,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
         VotingApi.getUserProfileDetails(object : VotingApi.Callback<UserProfileDetailsDTO> {
             override fun onSuccess(response: UserProfileDetailsDTO) {
                 Log.i("AuthViewModel", "Successfully fetched user profile details.")
-                // 4. Store profile details globally
                 CurrentUserHolder.updateProfile(response)
             }
 
@@ -67,32 +66,24 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
 
             try {
                 val dto = LoginRequest(egn = egn, documentNumber = doc_id)
-                // Call the suspending function from your VotingApi object
                 val response: LoginResponse = VotingApi.loginSuspending(dto)
                 InMemoryTokenHolder.saveToken(response.token)
                 fetchAndStoreUserProfile()
 
-                // --- Handle Success ---
                 println("Login successful!")
                 println("Received Token: ${response.token}") // Log the token
-                // TODO: Securely save the response.token (e.g., EncryptedSharedPreferences)
-                // Example: TokenStorage.saveToken(context, response.token)
-                onLoginSuccess() // Navigate after successful login and token handling
+                onLoginSuccess()
 
             } catch (e: Throwable) {
-                // --- Handle Failure (Exceptions) ---
                 println("Login failed!")
                 println("Error Type: ${e::class.java.simpleName}")
                 println("Error Message: ${e.message}")
                 e.printStackTrace()
 
-                // Set user-friendly error message based on exception type
                 error = when (e) {
                     is IOException -> "Грешка в мрежата. Моля, проверете връзката си."
                     is kotlinx.serialization.SerializationException -> "Грешка при обработка на отговора от сървъра."
-                    // Add specific checks for HTTP errors if ApiClient threw them differently
-                    // is HttpException -> "Грешка ${e.code()}: ..."
-                    else -> e.message ?: "Възникна грешка. Моля, опитайте отново." // Show backend message if available
+                    else -> e.message ?: "Възникна грешка. Моля, опитайте отново."
                 }
 
             } finally {
@@ -127,7 +118,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             fontSize = 30.sp
         )
 
-        //Spacer(modifier = Modifier.height(24.dp)) // Add spacing
+        //Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = egn,
@@ -137,8 +128,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            colors = TextFieldDefaults.colors( // <-- Use the colors parameter
-                // Set the text color for the enabled state (focused and unfocused)
+            colors = TextFieldDefaults.colors(
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black),
             singleLine = true,
@@ -153,8 +143,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
-            colors = TextFieldDefaults.colors( // <-- Use the colors parameter
-                // Set the text color for the enabled state (focused and unfocused)
+            colors = TextFieldDefaults.colors(
                 focusedTextColor = Color.Black,
                 unfocusedTextColor = Color.Black),
             singleLine = true,
