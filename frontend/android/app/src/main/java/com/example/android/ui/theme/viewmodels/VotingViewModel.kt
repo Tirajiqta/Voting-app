@@ -15,6 +15,7 @@ import com.example.android.dto.response.elections.ElectionResponseDTO
 import com.example.android.dummymodel.Candidate
 import com.example.android.dummymodel.Party
 import com.example.android.entity.election.VoteEntity
+import com.example.android.utils.CurrentUserHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -171,9 +172,8 @@ class VotingViewModel(
                     voteTimestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
                 )
                 Log.d("VOTE_SAVE_DEBUG", "Attempting to save vote: electionId=${vote.electionId}, partyId=${vote.partyId}, candidateId=${vote.candidateId}, userId=${vote.userId}")
-
-                // Ensure DAO/Repo function is suspend
-                electionsRepository.insertVote(vote) // Save to DB
+                val userId = CurrentUserHolder.getCurrentProfile()?.user?.id ?: 1;
+                electionsRepository.insertVoteAndCastApiVote(userId, vote.electionId, vote.partyId, vote.candidateId)
 
                 _uiState.update { it.copy(isLoading = false, voteSavedSuccessfully = true) } // Signal success
             } catch (e: Exception) {

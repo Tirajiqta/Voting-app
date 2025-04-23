@@ -1,6 +1,8 @@
 package com.example.android.repository
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 // Remove this import if not used elsewhere in the file, it can clash
 // import androidx.activity.result.launch
 import com.example.android.api.VotingApi
@@ -11,8 +13,10 @@ import com.example.android.dao.election.PartyDao
 import com.example.android.dao.election.PartyVoteDao
 import com.example.android.dao.election.PartyVoteResult
 import com.example.android.dao.election.VoteDao
+import com.example.android.dto.request.VoteRequestDTO
 import com.example.android.dto.response.PagedResponseDTO
 import com.example.android.dto.response.elections.ElectionResponseDTO
+import com.example.android.dto.response.elections.VoteResponseDTO
 import com.example.android.entity.election.CandidateEntity
 import com.example.android.entity.election.ElectionEntity
 import com.example.android.entity.election.PartyEntity
@@ -26,6 +30,8 @@ import kotlinx.coroutines.launch // Make sure you have this specific import
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException // Good practice for exceptions
 
@@ -36,36 +42,30 @@ class ElectionsRepository(
     private val partyVoteDao: PartyVoteDao,
     private val voteDao: VoteDao
 ) {
-    // --- Election ---
     suspend fun insertElection(election: ElectionEntity) = electionDao.insert(election)
     suspend fun updateElection(election: ElectionEntity) = electionDao.update(election)
     suspend fun deleteElection(election: ElectionEntity) = electionDao.delete(election)
     suspend fun getAllElections(): List<ElectionEntity> = electionDao.getAll()
     suspend fun getElectionById(id: Long): ElectionEntity? = electionDao.getById(id)
 
-    // --- Candidate (Assuming non-suspend based on original code) ---
-    // If these should interact with DB asynchronously, make them suspend and use withContext
     fun insertCandidate(candidate: CandidateEntity) = candidateDao.insert(candidate)
     fun updateCandidate(candidate: CandidateEntity) = candidateDao.update(candidate)
     fun deleteCandidate(candidate: CandidateEntity) = candidateDao.delete(candidate)
     fun getAllCandidates(): List<CandidateEntity> = candidateDao.getAll()
     fun getCandidateById(id: Long): CandidateEntity? = candidateDao.getById(id)
 
-    // --- Party ---
     suspend fun insertParty(party: PartyEntity) = partyDao.insert(party)
     suspend fun updateParty(party: PartyEntity) = partyDao.update(party)
     suspend fun deleteParty(party: PartyEntity) = partyDao.delete(party)
     suspend fun getAllParties(): List<PartyEntity> = partyDao.getAll()
     suspend fun getPartyById(id: Long): PartyEntity? = partyDao.getById(id)
 
-    // --- PartyVote (Assuming non-suspend based on original code) ---
     fun insertPartyVote(partyVote: PartyVoteEntity) = partyVoteDao.insert(partyVote)
     fun updatePartyVote(partyVote: PartyVoteEntity) = partyVoteDao.update(partyVote)
     fun deletePartyVote(partyVote: PartyVoteEntity) = partyVoteDao.delete(partyVote)
     fun getAllPartyVotes(): List<PartyVoteEntity> = partyVoteDao.getAll()
     fun getPartyVoteById(id: Long): PartyVoteEntity? = partyVoteDao.getById(id)
 
-    // --- Vote (Assuming non-suspend based on original code) ---
     suspend fun insertVote(vote: VoteEntity) = voteDao.insert(vote)
     fun updateVote(vote: VoteEntity) = voteDao.update(vote)
     fun deleteVote(vote: VoteEntity) = voteDao.delete(vote)
@@ -77,63 +77,128 @@ class ElectionsRepository(
     }
 
     suspend fun getPartyResults(electionId: Long): List<PartyVoteResult> {
-        // In a real app, you might want to join this with party names here
         return voteDao.getPartyVoteCountsWithName(electionId)
     }
 
     suspend fun getCandidateResults(electionId: Long): List<CandidateVoteResult> {
-        // In a real app, you might want to join this with candidate names here
         return voteDao.getCandidateVoteCountsWithName(electionId)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    suspend fun insertVoteAndCastApiVote(
+        userId: Long,
+        electionId: Long,
+        partyId: Long?,
+        candidateId: Long?
+    ): Result<VoteResponseDTO> {
+        return withContext(Dispatchers.IO) {
+            val timestamp = LocalDateTime.now().format(DateTimeFormatter.ISO_DATE_TIME)
+            val voteEntity = VoteEntity(
+                userId = userId,
+                electionId = electionId,
+                partyId = partyId,
+                candidateId = candidateId,
+                voteTimestamp = timestamp
+            )
+
+            try {
+                Log.d("ElectionsRepository", "Attempting to insert vote locally: $voteEntity")
+                val insertedVoteId = insertVote(voteEntity)
+                Log.i("ElectionsRepository", "Vote inserted locally with ID: $insertedVoteId")
+            } catch (dbException: Exception) {
+                Log.e("ElectionsRepository", "Local database vote insertion failed", dbException)
+                return@withContext Result.failure(
+                    Exception("Failed to save vote locally: ${dbException.message}", dbException)
+                )
+            }
+
+            suspendCancellableCoroutine<Result<VoteResponseDTO>> { continuation ->
+                val requestDto = VoteRequestDTO(
+                    electionId = electionId,
+                    partyId = partyId,
+                    candidateId = candidateId,
+                    appVersion = "1.0.0"
+                )
+
+                // Define the callback for the API call
+                val apiCallback = object : VotingApi.Callback<VoteResponseDTO> {
+                    override fun onSuccess(response: VoteResponseDTO) {
+                        Log.i("ElectionsRepository", "API vote cast successful: $response")
+                        if (continuation.isActive) {
+                            continuation.resume(Result.success(response))
+                        }
+                    }
+
+                    override fun onFailure(error: Throwable) {
+                        Log.e("ElectionsRepository", "API vote cast failed", error)
+                        if (continuation.isActive) {
+                            // Wrap the original error for better context
+                            continuation.resumeWithException(
+                                Exception("API call failed: ${error.message}", error)
+                            )
+                        }
+                    }
+                }
+
+                try {
+                    Log.d("ElectionsRepository", "Attempting to cast vote via API: $requestDto")
+                    VotingApi.castVote(
+                        request = requestDto,
+                        callback = apiCallback
+                    )
+
+                    continuation.invokeOnCancellation {
+                        Log.w("ElectionsRepository", "API vote casting coroutine cancelled.")
+                    }
+
+                } catch (apiCallException: Exception) {
+                    Log.e("ElectionsRepository", "Error initiating API vote cast call", apiCallException)
+                    if (continuation.isActive) {
+                        continuation.resumeWithException(
+                            Exception("Error initiating API call: ${apiCallException.message}", apiCallException)
+                        )
+                    }
+                }
+            }
+        }
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun fetchAndStoreActiveElections(): Result<List<ElectionEntity>> {
-        // Perform network and DB ops on IO thread.
-        // 'this' inside withContext refers to a CoroutineScope
-        return withContext(Dispatchers.IO) { // <-- This provides a CoroutineScope
+        return withContext(Dispatchers.IO) {
             suspendCancellableCoroutine<Result<List<ElectionEntity>>> { continuation ->
-                // Capture the scope provided by withContext
                 val coroutineScope = this
 
                 val apiCallback =
                     object : VotingApi.Callback<PagedResponseDTO<ElectionResponseDTO>> {
                         override fun onSuccess(response: PagedResponseDTO<ElectionResponseDTO>) {
-                            // Use the captured scope to launch the database operations
-                            coroutineScope.launch { // <-- Launch on the captured scope
+                            coroutineScope.launch {
                                 try {
                                     val electionsDto = response.content ?: emptyList()
                                     val fetchedEntities = electionsDto.map { it.toEntity() }
 
-                                    // Use coroutineScope to wait for all inner DB operations to finish
-                                    // This naturally inherits the context (Dispatchers.IO)
-                                    coroutineScope { // <-- This is correct usage inside a coroutine
+                                    coroutineScope {
                                         fetchedEntities.forEach { entity ->
-                                            // Launch each DB operation concurrently within the scope
-                                            launch { // <-- This launch inherits the scope and context
+                                            launch {
                                                 try {
-                                                    val existing = getElectionById(entity.id ?: 0) // Use 0 as default id
+                                                    val existing = getElectionById(entity.id ?: 0)
                                                     if (existing != null) {
                                                         updateElection(entity)
                                                     } else {
                                                         insertElection(entity)
                                                     }
                                                 } catch (dbOpException: Exception) {
-                                                    // Log individual DB operation failure if needed
                                                     Log.e("ElectionsRepository", "DB op failed for entity ${entity.id}", dbOpException)
-                                                    // Decide if one failure should fail the whole process
-                                                    // For now, let's let others continue but log the error
                                                 }
                                             }
                                         }
-                                    } // <-- Waits for all inner launches to complete
+                                    }
 
-                                    // All database operations attempted (some might have failed individually if not handled)
-                                    // Resume the original continuation only if it's still active
                                     if (continuation.isActive) {
                                         continuation.resume(Result.success(fetchedEntities))
                                     }
 
-                                } catch (e: Exception) { // Catch exceptions during mapping or the outer coroutineScope setup
+                                } catch (e: Exception) {
                                     Log.e("ElectionsRepository", "Error processing DB operations", e)
                                     if (continuation.isActive) {
                                         continuation.resumeWithException(
@@ -141,22 +206,19 @@ class ElectionsRepository(
                                         )
                                     }
                                 }
-                            } // End of coroutineScope.launch
+                            }
                         }
 
                         override fun onFailure(error: Throwable) {
                             Log.e("ElectionsRepository", "API Call Failed: ${error.message}", error)
-                            // Resume with failure only if the continuation is still active
                             if (continuation.isActive) {
                                 continuation.resumeWithException(
                                     Exception("API Call Failed: ${error.message}", error)
                                 )
                             }
-                            // Removed the redundant onCancellation block inside resume/resumeWithException
                         }
                     }
 
-                // --- Make the API Call ---
                 try {
                     VotingApi.listElections(
                         page = 0,
@@ -167,13 +229,10 @@ class ElectionsRepository(
                     )
 
                     continuation.invokeOnCancellation {
-                        // If your API call can be cancelled, do it here.
-                        // e.g., someApiClientRequest.cancel()
                         Log.d("ElectionsRepository", "Election fetch coroutine cancelled.")
-                        // No need to resume continuation here, it's handled by the cancellation mechanism
                     }
 
-                } catch (e: Exception) { // Catch immediate exceptions during API call setup
+                } catch (e: Exception) {
                     Log.e("ElectionsRepository", "Error initiating API call", e)
                     if (continuation.isActive) {
                         continuation.resumeWithException(
@@ -187,12 +246,6 @@ class ElectionsRepository(
 
     // Gets all elections currently stored in the database
     suspend fun getAllElectionsFromDb(): List<ElectionEntity> {
-        // No need for extra withContext if getAllElections already uses Dispatchers.IO implicitly or explicitly
-        // Assuming electionDao.getAll() handles its own context or is safe to call from IO
         return electionDao.getAll()
-        // OR if electionDao.getAll() doesn't specify context:
-        // return withContext(Dispatchers.IO) {
-        //     electionDao.getAll()
-        // }
     }
 }
