@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.asStateFlow
 
 object CurrentUserHolder {
 
-    // Use StateFlow for observing changes reactively (optional but good practice)
     private val _userProfileDetails = MutableStateFlow<UserProfileDetailsDTO?>(null)
     val userProfileDetails: StateFlow<UserProfileDetailsDTO?> = _userProfileDetails.asStateFlow()
 
@@ -18,12 +17,6 @@ object CurrentUserHolder {
      */
     fun updateProfile(details: UserProfileDetailsDTO?) {
         _userProfileDetails.value = details
-        // Log if needed:
-        // if (details != null) {
-        //     Log.i("CurrentUserHolder", "User profile updated: ${details.user.name}")
-        // } else {
-        //     Log.i("CurrentUserHolder", "User profile cleared.")
-        // }
     }
 
     /**

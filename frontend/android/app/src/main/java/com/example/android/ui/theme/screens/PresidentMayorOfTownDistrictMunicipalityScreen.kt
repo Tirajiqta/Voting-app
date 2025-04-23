@@ -24,21 +24,17 @@ import com.example.android.dummymodel.PresidentialPair // Import your data class
 import com.example.android.dummymodel.SUPPORT_NOBODY_ID // Import the constant
 import com.example.compose.AppTheme // Import your theme
 
-// screen for President, mayor of town, mayor of district, mayor of municipality
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PresidentVoteScreen(
-    electionTitle: String = "Избори за Президент и Вицепрезидент", // Example Title
+    electionTitle: String = "Избори за Президент и Вицепрезидент",
     electionDate: String = "27.10.2024",
-    options: List<PresidentialPair>, // List including "Support Nobody"
+    options: List<PresidentialPair>,
     onNavigateBack: () -> Unit,
-    onReviewVote: (selectedOptionId: Int) -> Unit // Pass only the selected ID
+    onReviewVote: (selectedOptionId: Int) -> Unit
 ) {
-    // --- State ---
     var selectedOptionId by remember { mutableStateOf<Int?>(null) }
 
-    // --- UI ---
     Scaffold(
         topBar = {
             TopAppBar(
@@ -67,7 +63,7 @@ fun PresidentVoteScreen(
                             onReviewVote(optionId)
                         }
                     },
-                    enabled = selectedOptionId != null, // Enabled only when an option is selected
+                    enabled = selectedOptionId != null,
                     modifier = Modifier.width(200.dp)
                 ) {
                     Text(
@@ -82,11 +78,10 @@ fun PresidentVoteScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues) // Apply padding from Scaffold
-                .padding(horizontal = 16.dp), // Horizontal padding for list content
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
-            // --- Header ---
             item {
                 Column(
                     modifier = Modifier
@@ -113,7 +108,6 @@ fun PresidentVoteScreen(
                 }
             }
 
-            // --- Option List ---
             items(options, key = { it.id }) { option ->
                 val isSelected = option.id == selectedOptionId
                 PresidentialItem(
@@ -124,17 +118,13 @@ fun PresidentVoteScreen(
                     }
                 )
 
-                // --- Candidate Names Display (Conditional) ---
-                // Show only if this option is selected AND it's not the "Support Nobody" option
                 if (isSelected && option.id != SUPPORT_NOBODY_ID) {
                     CandidateDisplay(
                         nomineesString = option.candidates
                     )
                 }
 
-                // Add a divider unless it's the support nobody option which might be visually distinct
                 if (option.id != SUPPORT_NOBODY_ID) {
-                    //Divider()
                 } else {
                     Spacer(modifier = Modifier.height(8.dp)) // Add some space after support nobody
                 }
@@ -143,7 +133,6 @@ fun PresidentVoteScreen(
     }
 }
 
-// --- Composable for a single Presidential Option Item ---
 @Composable
 fun PresidentialItem(
     option: PresidentialPair,
@@ -154,7 +143,6 @@ fun PresidentialItem(
     val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
     val shape = RoundedCornerShape(4.dp)
 
-    // Special handling for the "Support Nobody" checkbox look
     val isSupportNobody = option.id == SUPPORT_NOBODY_ID
 
     Spacer(Modifier.height(10.dp))
@@ -164,40 +152,35 @@ fun PresidentialItem(
             .clip(shape)
             .border(
                 1.dp,
-                // Don't draw border around the checkbox item row if it's SupportNobody
                 if (isSupportNobody) Color.Transparent else borderColor,
                 shape
             )
             .background(
-                if (isSupportNobody) Color.Transparent else backgroundColor, // No background for checkbox item
+                if (isSupportNobody) Color.Transparent else backgroundColor,
                 shape
             )
             .clickable { onSelected() }
             .padding(
-                vertical = if (isSupportNobody) 4.dp else 10.dp, // Less vertical padding for checkbox
+                vertical = if (isSupportNobody) 4.dp else 10.dp,
                 horizontal = 8.dp
             ),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Ballot Number Box OR Checkbox for "Support Nobody"
         Box(
             modifier = Modifier
                 .size(32.dp)
-                // Apply standard border unless it's the support nobody option
                 .then(
                     if (!isSupportNobody) {
                         Modifier.border(1.5.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp))
                     } else {
-                        Modifier // No border needed, checkbox draws its own box
+                        Modifier
                     }
                 ),
             contentAlignment = Alignment.Center
         ) {
             if (isSupportNobody) {
-                // Display a Checkbox visual (doesn't need state, reflects parent selection)
                 Checkbox(checked = isSelected, onCheckedChange = { onSelected() })
             } else if (isSelected) {
-                // Display "X" when selected (and not support nobody)
                 Text(
                     text = "X",
                     fontSize = 28.sp,
@@ -206,7 +189,6 @@ fun PresidentialItem(
                     textAlign = TextAlign.Center
                 )
             } else {
-                // Display the option ID number when not selected
                 Text(
                     text = option.id.toString(),
                     fontWeight = FontWeight.Bold,
@@ -214,8 +196,6 @@ fun PresidentialItem(
                 )
             }
         }
-        //Spacer(modifier = Modifier.width(12.dp))
-        // Option Name (Party or "Не подкрепям никого")
         Text(
             text = option.partyName,
             style = MaterialTheme.typography.bodyLarge,
@@ -225,13 +205,10 @@ fun PresidentialItem(
     }
 }
 
-// --- Composable for displaying candidate names ---
 @Composable
 fun CandidateDisplay(nomineesString: String) {
-    // Split the string into individual names
-    // Handle potential variations in separator (;, ,, multiple spaces)
     val nomineeNames = remember(nomineesString) {
-        nomineesString.split(Regex("[;,] *")) // Split by semicolon or comma, trimming spaces
+        nomineesString.split(Regex("[;,] *"))
             .map { it.trim() }
             .filter { it.isNotEmpty() }
     }
@@ -239,11 +216,11 @@ fun CandidateDisplay(nomineesString: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 16.dp, start = 16.dp, end = 16.dp) // Indent slightly
+            .padding(top = 8.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
     ) {
         if (nomineeNames.isNotEmpty()) {
             Text(
-                text = "Кандидати", // "Candidates"
+                text = "Кандидати",
                 style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
@@ -254,16 +231,13 @@ fun CandidateDisplay(nomineesString: String) {
                 )
             }
         }
-        // Else: Don't show anything if the nominee string was empty or invalid
     }
 }
 
 
-// --- Previews ---
 @Preview(showBackground = true, widthDp = 380)
 @Composable
 fun PresidentVoteScreenPreview() {
-    // Sample Data for Preview
     val sampleOptions = List(7) { index ->
         PresidentialPair(
             id = index + 1,
@@ -271,11 +245,10 @@ fun PresidentVoteScreenPreview() {
             candidates = "Кандидат ${index + 1}А; Кандидат ${index + 1}Б"
         )
     }.plus(
-        // Add the "Support Nobody" option
         PresidentialPair(
             id = SUPPORT_NOBODY_ID,
             partyName = "Не подкрепям никого",
-            candidates = "" // No nominees for this option
+            candidates = ""
         )
     )
 

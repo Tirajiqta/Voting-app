@@ -15,7 +15,7 @@ object InMemoryTokenHolder {
     fun saveToken(token: String?) {
         currentToken = token
         if (token != null) {
-            Log.d(TAG, "Token updated in memory.") // Log without showing token
+            Log.d(TAG, "Token updated in memory.")
         } else {
             Log.d(TAG, "Token cleared from memory.")
         }

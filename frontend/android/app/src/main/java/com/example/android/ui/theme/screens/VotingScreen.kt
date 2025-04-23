@@ -40,11 +40,9 @@ import kotlinx.coroutines.launch
 fun VotingScreen(
     navController: NavController,
     electionId: Long,
-    userId: Long // Pass the logged-in user's ID here
+    userId: Long
 ) {
-    // --- ViewModel Setup ---
     val context = LocalContext.current
-    // Repository setup (consider moving this to a central dependency injection solution)
     val appDatabase = remember { AppDatabase.getInstance(context.applicationContext) }
     val electionsRepository = remember {
         ElectionsRepository(
@@ -55,43 +53,31 @@ fun VotingScreen(
             voteDao = appDatabase.voteDao()
         )
     }
-    // Create SavedStateHandle manually if not using Hilt/other DI that provides it
     val savedStateHandle = remember { SavedStateHandle(mapOf("electionId" to electionId)) }
 
     val viewModel: VotingViewModel = viewModel(
         factory = VotingViewModelFactory(electionsRepository, savedStateHandle)
     )
 
-    // --- State Collection ---
     val uiState by viewModel.uiState.collectAsState()
     var showConfirmationDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
-    // --- Navigation Effect ---
     LaunchedEffect(uiState.voteSavedSuccessfully) {
         if (uiState.voteSavedSuccessfully) {
-            // Navigate back or to a confirmation screen
-            // Example: Pop back stack to the screen before voting
             scope.launch {
                 snackbarHostState.showSnackbar("Гласът е запазен успешно!") // Optional feedback
             }
             navController.popBackStack()
-            // Or navigate to a specific main screen route:
-            // navController.navigate("main_screen_route") {
-            //     popUpTo(navController.graph.startDestinationId) { inclusive = true }
-            // }
         }
     }
 
-    // --- Error Handling Effect ---
     LaunchedEffect(uiState.error) {
         uiState.error?.let { errorMsg ->
             scope.launch {
                 snackbarHostState.showSnackbar(errorMsg, duration = SnackbarDuration.Long)
             }
-            // Optionally clear the error in the ViewModel after showing it
-            // viewModel.clearError()
         }
     }
 
@@ -107,11 +93,10 @@ fun VotingScreen(
             )
         },
         bottomBar = {
-            // Button placed in the bottom bar area for consistent placement
             BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.surface, // Or another appropriate color
+                containerColor = MaterialTheme.colorScheme.surface,
             ) {
-                Spacer(Modifier.weight(1f)) // Push button to the end
+                Spacer(Modifier.weight(1f))
                 Button(
                     onClick = { showConfirmationDialog = true },
                     enabled = uiState.selectedPartyId != null && uiState.selectedCandidateId != null && !uiState.isLoading,
@@ -125,14 +110,14 @@ fun VotingScreen(
 
         Box(modifier = Modifier
             .fillMaxSize()
-            .padding(paddingValues) // Apply padding from Scaffold
+            .padding(paddingValues)
         ) {
             when {
-                uiState.isLoading && uiState.parties.isEmpty() -> { // Show loading only initially
+                uiState.isLoading && uiState.parties.isEmpty() -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
-                !uiState.isLoading && uiState.error != null && uiState.parties.isEmpty() -> { // Show error only if loading failed
+                !uiState.isLoading && uiState.error != null && uiState.parties.isEmpty() -> {
                     Text(
                         text = uiState.error ?: "Възникна грешка",
                         color = MaterialTheme.colorScheme.error,
@@ -144,17 +129,15 @@ fun VotingScreen(
                 }
 
                 else -> {
-                    // Main content: Party list and Preference grid
                     Row(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(8.dp) // Padding around the row
+                            .padding(8.dp)
                     ) {
-                        // --- Party List (Left Side) ---
                         LazyColumn(
                             modifier = Modifier
-                                .weight(1f) // Takes half the width
-                                .padding(end = 4.dp) // Space between columns
+                                .weight(1f)
+                                .padding(end = 4.dp)
                                 .border(1.dp, MaterialTheme.colorScheme.outline)
                         ) {
                             items(uiState.parties, key = { it.id }) { party ->
@@ -167,13 +150,12 @@ fun VotingScreen(
                             }
                         }
 
-                        // --- Preferences (Right Side) ---
                         Column(
                             modifier = Modifier
-                                .weight(1f) // Takes the other half
-                                .padding(start = 4.dp) // Space between columns
+                                .weight(1f)
+                                .padding(start = 4.dp)
                                 .border(1.dp, MaterialTheme.colorScheme.outline)
-                                .padding(8.dp) // Inner padding for the preference area
+                                .padding(8.dp)
                         ) {
                             Text(
                                 "Предпочитание (Преференция)",
@@ -202,7 +184,7 @@ fun VotingScreen(
                                 }
                             } else {
                                 LazyVerticalGrid(
-                                    columns = GridCells.Adaptive(minSize = 50.dp), // Adjust minSize for circle size
+                                    columns = GridCells.Adaptive(minSize = 50.dp),
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -217,32 +199,27 @@ fun VotingScreen(
                                 }
                             }
                         }
-                    } // End Row
-
-                    // Show loading overlay when saving vote
+                    }
                     if (uiState.isLoading && uiState.selectedPartyId != null) {
                         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)), contentAlignment = Alignment.Center){
                             CircularProgressIndicator()
                         }
                     }
-                } // End Else
-            } // End When
-        } // End Box
+                }
+            }
+        }
 
-        // --- Confirmation Dialog ---
         if (showConfirmationDialog) {
             ConfirmationDialog(
                 onConfirm = {
                     showConfirmationDialog = false
-                    viewModel.saveVote(userId) // Pass the actual userId
+                    viewModel.saveVote(userId)
                 },
                 onDismiss = { showConfirmationDialog = false }
             )
         }
     }
 }
-
-// --- Helper Composables ---
 
 @Composable
 fun PartyItem(
@@ -261,7 +238,7 @@ fun PartyItem(
         Text(
             text = "${party.number}",
             modifier = Modifier
-                .width(30.dp) // Fixed width for number box
+                .width(30.dp)
                 .border(1.dp, MaterialTheme.colorScheme.outline)
                 .padding(vertical = 4.dp),
             textAlign = TextAlign.Center,
@@ -273,7 +250,7 @@ fun PartyItem(
             text = party.name,
             color = if (isSelected) MaterialTheme.colorScheme.inverseOnSurface else LocalContentColor.current,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f) // Take remaining space
+            modifier = Modifier.weight(1f)
         )
     }
 }
@@ -290,40 +267,38 @@ fun PreferenceItem(
 
     Box(
         modifier = Modifier
-            .size(48.dp) // Size of the circle
+            .size(48.dp)
             .clip(CircleShape)
             .background(if (isSelected) selectedColor else Color.Transparent)
             .border(
                 width = 1.5.dp,
-                color = if (isSelected) selectedColor else normalBorderColor, // Border same as background when selected
+                color = if (isSelected) selectedColor else normalBorderColor,
                 shape = CircleShape
             )
             .clickable(onClick = onPreferenceClick),
         contentAlignment = Alignment.Center
     ) {
-        // Draw 'X' if selected
         if (isSelected) {
             Text(
-                text = "X", // Simple X, consider using an Icon if needed
+                text = "X",
                 color = selectedContentColor,
-                fontSize = 20.sp, // Adjust size as needed
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.offset(y = (-1).dp) // Slight offset correction if needed
+                modifier = Modifier.offset(y = (-1).dp)
             )
-            Text( // Overlay number slightly less prominently
+            Text(
                 text = "${candidate.preferenceNumber}",
-                color = selectedContentColor.copy(alpha = 0.7f), // Make number slightly transparent
-                fontSize = 10.sp, // Smaller font for number under X
+                color = selectedContentColor.copy(alpha = 0.7f),
+                fontSize = 10.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp) // Position at bottom
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 4.dp)
             )
         } else {
-            // Show only number if not selected
             Text(
                 text = "${candidate.preferenceNumber}",
                 color = LocalContentColor.current,
-                fontSize = 14.sp, // Normal number size
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )

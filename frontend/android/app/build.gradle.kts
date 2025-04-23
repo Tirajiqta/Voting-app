@@ -80,16 +80,14 @@ dependencies {
     // ML Kit Text Recognition
     implementation("com.google.mlkit:text-recognition:16.0.0")
     val roomVersion = "2.5.2"
-    val hiltVersion = "2.51.1" // Or better: libs.versions.hilt.get()
-    implementation("com.google.dagger:hilt-android:$hiltVersion") // <-- **** ADD THIS LINE ****
+    val hiltVersion = "2.51.1"
+    implementation("com.google.dagger:hilt-android:$hiltVersion")
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")   // <-- Use 'ksp' configuration
-    ksp("com.google.dagger:hilt-compiler:$hiltVersion") // <-- ADD Hilt KSP Compiler
+    ksp("androidx.room:room-compiler:$roomVersion")
+    ksp("com.google.dagger:hilt-compiler:$hiltVersion")
 
-    // Kotlin Extensions and Coroutines support for Room
     implementation("androidx.room:room-ktx:$roomVersion")
 
-    // Testing dependencies (if you plan to write Room tests)
     testImplementation("androidx.room:room-testing:$roomVersion")
 }
