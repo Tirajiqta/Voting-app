@@ -126,7 +126,7 @@ fun PresidentVoteScreen(
 
                 if (option.id != SUPPORT_NOBODY_ID) {
                 } else {
-                    Spacer(modifier = Modifier.height(8.dp)) // Add some space after support nobody
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }

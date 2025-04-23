@@ -25,6 +25,7 @@ import com.example.android.dummymodel.Candidate // Import dummy data classes
 import com.example.android.dummymodel.Party    // Import dummy data classes
 import com.example.compose.AppTheme // Import your theme
 
+//Screen for EU parliament, BG parliament, local council
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -34,10 +35,11 @@ fun ParliamentVoteScreen(
     parties: List<Party>,
     candidates: List<Candidate>,
     onNavigateBack: () -> Unit,
-    onReviewVote: (selectedPartyId: Int, selectedPreferenceId: Int?) -> Unit // Pass selected IDs
+    onReviewVote: (selectedPartyId: Int, selectedPreferenceId: Long?) -> Unit
 ) {
+    // --- State ---
     var selectedPartyId by remember { mutableStateOf<Int?>(null) }
-    var selectedPreferenceId by remember { mutableStateOf<Int?>(null) }
+    var selectedPreferenceId by remember { mutableStateOf<Long?>(null) }
 
     val currentPartyCandidates by remember(selectedPartyId) {
         derivedStateOf {
@@ -45,10 +47,12 @@ fun ParliamentVoteScreen(
         }
     }
 
+    // Reset preference when party changes
     LaunchedEffect(selectedPartyId) {
         selectedPreferenceId = null
     }
 
+    // --- UI ---
     Scaffold(
         topBar = {
             TopAppBar(
@@ -96,6 +100,7 @@ fun ParliamentVoteScreen(
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
+            // --- Header ---
             item {
                 Column(
                     modifier = Modifier
@@ -118,7 +123,7 @@ fun ParliamentVoteScreen(
                         textAlign = TextAlign.Center,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Divider()
+                    Divider() // Separator line
                 }
             }
 
@@ -141,6 +146,7 @@ fun ParliamentVoteScreen(
                         }
                     )
                 }
+                //
             }
         }
     }
@@ -167,6 +173,7 @@ fun PartyItem(
             .padding(vertical = 10.dp, horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Ballot Number Box
         Box(
             modifier = Modifier
                 .size(32.dp)
@@ -174,6 +181,7 @@ fun PartyItem(
             contentAlignment = Alignment.Center
         ) {
             if (isSelected) {
+
                 Text(
                     text = "X",
                     fontSize = 28.sp,
@@ -186,6 +194,7 @@ fun PartyItem(
                     text = party.id.toString(),
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
+
                 )
             }
         }
@@ -202,8 +211,8 @@ fun PartyItem(
 @Composable
 fun PreferenceSelection(
     candidates: List<Candidate>,
-    selectedPreferenceId: Int?,
-    onPreferenceSelected: (candidateId: Int?) -> Unit
+    selectedPreferenceId: Long?,
+    onPreferenceSelected: (candidateId: Long?) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -222,7 +231,7 @@ fun PreferenceSelection(
         ) {
             candidates.forEach { candidate ->
                 PreferenceCircle(
-                    candidateId = candidate.id,
+                    candidateId = candidate.id.toInt(),
                     isSelected = candidate.id == selectedPreferenceId,
                     onSelected = {
                         val newSelection = if (candidate.id == selectedPreferenceId) null else candidate.id
@@ -267,7 +276,7 @@ fun PreferenceCircle(
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.offset(y = (-1).dp) 
+                modifier = Modifier.offset(y = (-1).dp)
             )
         }
     }
@@ -277,25 +286,74 @@ fun PreferenceCircle(
 @Preview(showBackground = true, widthDp = 380)
 @Composable
 fun ParliamentVoteScreenPreview() {
+    // Sample Data for Preview
     val sampleParties = List(7) { index ->
         Party(id = index + 1, name = "Партия / Коалиция ${index + 1}")
     }.plus(Party(id = 8, name = "Не подкрепям никого"))
 
     val sampleCandidates = listOf(
-        Candidate(id = 101, name = "Канд. 1", partyId = 1),
-        Candidate(id = 102, name = "Канд. 2", partyId = 1),
-        Candidate(id = 103, name = "Канд. 3", partyId = 2),
-        Candidate(id = 104, name = "Канд. 4", partyId = 2),
-        Candidate(id = 105, name = "Канд. 5", partyId = 3),
-        Candidate(id = 106, name = "Канд. 6", partyId = 3),
-        Candidate(id = 107, name = "Канд. 7", partyId = 4),
-        Candidate(id = 108, name = "Канд. 8", partyId = 4),
-        Candidate(id = 109, name = "Канд. 9", partyId = 5),
-        Candidate(id = 110, name = "Канд. 10", partyId = 5),
-        Candidate(id = 111, name = "Канд. 11", partyId = 6),
-        Candidate(id = 112, name = "Канд. 12", partyId = 6),
-        Candidate(id = 101, name = "Друг 1", partyId = 7),
-        Candidate(id = 102, name = "Друг 2", partyId = 7),
+        // Candidates for Party 8
+        Candidate(
+            id = 1, name = "Канд. 1", partyId = 1,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 2, name = "Канд. 2", partyId = 1,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 3, name = "Канд. 3", partyId = 2,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 4, name = "Канд. 4", partyId = 2,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 5, name = "Канд. 5", partyId = 3,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 6, name = "Канд. 6", partyId = 3,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 7, name = "Канд. 7", partyId = 4,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 8, name = "Канд. 8", partyId = 4,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 9, name = "Канд. 9", partyId = 5,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 10, name = "Канд. 10", partyId = 5,
+            preferenceNumber = 102
+        ),
+        Candidate(
+            id = 11, name = "Канд. 105", partyId = 5,
+            preferenceNumber = 103
+        ),
+        Candidate(
+            id = 12, name = "Канд. 11", partyId = 6,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 13, name = "Канд. 12", partyId = 6,
+            preferenceNumber = 102
+        ),
+        // Add candidates for other parties if needed for testing
+        Candidate(
+            id = 14, name = "Друг 1", partyId = 7,
+            preferenceNumber = 101
+        ),
+        Candidate(
+            id = 15, name = "Друг 2", partyId = 7,
+            preferenceNumber = 102
+        ),
     )
 
     AppTheme {

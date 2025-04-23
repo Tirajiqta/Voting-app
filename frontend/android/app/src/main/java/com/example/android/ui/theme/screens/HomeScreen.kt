@@ -28,7 +28,8 @@ import com.example.compose.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit, onNavigateToVoteElection: () -> Unit) {
+fun HomeScreen(onNavigateToSetting: () -> Unit,     onNavigateToResults: () -> Unit,
+               onNavigateToProfile: () -> Unit, onNavigateToVoteElection: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -45,6 +46,7 @@ fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit,
                     IconButton(onClick = { onNavigateToProfile() }) {
                         Icon(Icons.Default.Person, contentDescription = "Profile")
                     }
+
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -59,9 +61,11 @@ fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit,
                 .padding(padding)
                 .padding(16.dp)
                 .background(MaterialTheme.colorScheme.surfaceContainerLowest),
+            //verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            //Spacer(Modifier.height(100.dp))
             Image(
                 painter = painterResource(id = R.drawable.voting),
                 contentDescription = "eVote Logo",
@@ -92,7 +96,9 @@ fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit,
                     fontSize = 24.sp
                 )
             }
+
             Spacer(Modifier.height(30.dp))
+
             Text(
                 "Внимание! След натискане\nна бутона не напускайте\nприложението до" +
                         " завършване\nна гласъването, впротивен\nслучай вотът щебъде\nневалиден",
@@ -103,18 +109,17 @@ fun HomeScreen(onNavigateToSetting: () -> Unit, onNavigateToProfile: () -> Unit,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 lineHeight = 20.sp
             )
+            Spacer(Modifier.height(40.dp))
 
-//            ElectionCard(
-//                title = "Presidential Election",
-//                description = "Vote for the next president of the country.",
-//                // Pass a lambda that calls the main navigation lambda with a specific ID
-//                onClick = { onNavigateToVoteElection("presidential") }
-//            )
-//            ElectionCard(
-//                title = "Local Government Election",
-//                description = "Choose your local representatives.",
-//                onClick = { onNavigateToVoteElection("local") }
-//            )
+            Button(onClick = {
+                Runtime.getRuntime().exit(0) },
+
+            ) {
+                Text(
+                    "Изход",
+                    fontSize = 20.sp
+                )
+            }
         }
     }
 
@@ -131,7 +136,7 @@ fun ElectionCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 4.dp), // Adjusted padding slightly
+            .padding(horizontal = 8.dp, vertical = 4.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -149,7 +154,8 @@ fun HomeScreen() {
         HomeScreen(
             onNavigateToSetting = {},
             onNavigateToProfile = {},
-            onNavigateToVoteElection = {}
+            onNavigateToVoteElection = {},
+            onNavigateToResults = {}
         )
     }
 

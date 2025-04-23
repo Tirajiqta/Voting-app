@@ -14,7 +14,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.android.dummymodel.*
+import com.example.android.dummymodel.* // Import your models (Party, Candidate, etc.)
 import com.example.compose.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +34,7 @@ fun VotePreviewScreen(
 
     fun findPartyName(id: Int?): String? = parliamentParties.find { it.id == id }?.name
     fun findCandidateName(partyId: Int?, prefId: Int?): String? =
-        parliamentCandidates.find { it.partyId == partyId && it.id == prefId }?.name
+        parliamentCandidates.find { it.partyId == partyId && it.id.toInt() == prefId }?.name
     fun findPresidentialOptionText(id: Int?): String? = presidentialOptions.find { it.id == id }?.partyName
     fun findReferendumAnswerText(id: Int?): String? = referendumAnswers.find { it.id == id }?.text
     fun findPresidentialNominees(id: Int?): String? = presidentialOptions.find { it.id == id }?.candidates
@@ -59,31 +59,26 @@ fun VotePreviewScreen(
         },
         containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
         bottomBar = {
-            // Buttons at the bottom
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceAround, // Space out buttons
+                horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Clear Button
                 OutlinedButton(
                     onClick = onClearAndRestart,
-                    enabled = !isSubmitting, // Disable during submit
+                    enabled = !isSubmitting,
                     modifier = Modifier.weight(1f).padding(end = 8.dp)
                 ) {
                     Text("Изчисти")
                 }
-
                 Button(
                     onClick = {
                         isSubmitting = true
                         submissionError = null
-
-
                         onConfirmVote()
-
                     },
                     enabled = !isSubmitting,
                     modifier = Modifier.weight(1f).padding(start = 8.dp)
@@ -108,7 +103,6 @@ fun VotePreviewScreen(
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
-
             item {
                 if (submissionError != null) {
                     Text(
@@ -118,7 +112,6 @@ fun VotePreviewScreen(
                     )
                 }
             }
-
 
             if (voteSummary.parliamentPartyId != null) {
                 item {
@@ -137,26 +130,24 @@ fun VotePreviewScreen(
                 }
             }
 
-
             if (voteSummary.presidentialOptionId != null) {
                 item {
                     SelectionSummaryCard(title = "Избори за Президент и Вицепрезидент") {
                         val optionText = findPresidentialOptionText(voteSummary.presidentialOptionId) ?: "Неизвестен избор"
                         SelectionDetailRow("Избран вариант:", optionText)
 
-
+                        // Optionally display nominees IF NOT "Support Nobody"
                         if(voteSummary.presidentialOptionId != SUPPORT_NOBODY_ID) {
                             val nominees = findPresidentialNominees(voteSummary.presidentialOptionId)
                             if (!nominees.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(4.dp))
-                                SelectionDetailRow("Кандидати:", nominees.replace(";", "\n").replace(",", "\n").trim())
+                                SelectionDetailRow("Кандидати:", nominees.replace(";", "\n").replace(",", "\n").trim()) // Display nominees nicely
                             }
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                 }
             }
-
 
             if (voteSummary.referendumAnswerId != null) {
                 item {
@@ -168,13 +159,9 @@ fun VotePreviewScreen(
                 }
             }
 
-
-
-
         }
     }
 }
-
 
 
 @Composable
@@ -197,7 +184,6 @@ fun SelectionSummaryCard(
             )
             Divider()
             Spacer(modifier = Modifier.height(8.dp))
-
             content()
         }
     }
@@ -224,11 +210,9 @@ fun SelectionDetailRow(label: String, value: String) {
 }
 
 
-
 @Preview(showBackground = true, widthDp = 380)
 @Composable
 fun VotePreviewScreenPreview() {
-
     val previewSummary = VoteSelectionSummary(
         parliamentPartyId = 8,
         parliamentPreferenceId = 108,
@@ -236,9 +220,8 @@ fun VotePreviewScreenPreview() {
         referendumAnswerId = 1
     )
 
-
     val sampleParties = listOf(Party(8, "Коалиция „ДПС – Ново начало“"))
-    val sampleCandidates = listOf(Candidate(108, "Канд. 8", 8))
+    val sampleCandidates = listOf(Candidate(1, 108, "Канд. 8", 8))
     val samplePresidential = listOf(
         PresidentialPair(1, "ГЕРБ", "Иван Митрополски; Надежда Митева"),
         PresidentialPair(SUPPORT_NOBODY_ID, "Не подкрепям никого", "")

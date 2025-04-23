@@ -21,9 +21,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.android.dummymodel.ReferendumAnswer // Import your data class
-import com.example.compose.AppTheme // Import your theme
+import com.example.android.dummymodel.ReferendumAnswer
+import com.example.compose.AppTheme
 
+// Referendum screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -88,6 +89,7 @@ fun ReferendumScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
+                    //Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = referendumQuestion,
                         style = MaterialTheme.typography.headlineSmall,
@@ -95,9 +97,11 @@ fun ReferendumScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(16.dp))
+                    //Divider() // Separator line
                 }
             }
 
+            // --- Answer List ---
             items(answers, key = { it.id }) { answer ->
                 val isSelected = answer.id == selectedAnswerId
                 ReferendumAnswerItem(
@@ -108,6 +112,7 @@ fun ReferendumScreen(
                     }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
+                // Divider()
             }
         }
     }
@@ -119,10 +124,12 @@ fun ReferendumAnswerItem(
     isSelected: Boolean,
     onSelected: () -> Unit
 ) {
+    // Appearance when selected
     val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f) else Color.Transparent
     val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
     val shape = RoundedCornerShape(8.dp) // Slightly more rounded? Adjust as needed.
 
+    // Box appearance (where the 'X' goes)
     val selectionBoxShape = RoundedCornerShape(4.dp)
     val selectionBoxBorderColor = MaterialTheme.colorScheme.outline
 
@@ -136,6 +143,7 @@ fun ReferendumAnswerItem(
             .padding(vertical = 12.dp, horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        // Selection Box (displays 'X' when selected)
         Box(
             modifier = Modifier
                 .size(32.dp)
@@ -165,6 +173,7 @@ fun ReferendumAnswerItem(
 @Preview(showBackground = true, widthDp = 380)
 @Composable
 fun ReferendumScreenPreview() {
+    // Sample Data for Preview
     val sampleQuestion = "Съгласни ли сте българският лев да бъде единствена официална валута в България до 2043 г.?"
     val sampleAnswers = listOf(
         ReferendumAnswer(id = 1, text = "ДА"),

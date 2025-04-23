@@ -44,7 +44,6 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
         VotingApi.getUserProfileDetails(object : VotingApi.Callback<UserProfileDetailsDTO> {
             override fun onSuccess(response: UserProfileDetailsDTO) {
                 Log.i("AuthViewModel", "Successfully fetched user profile details.")
-                // 4. Store profile details globally
                 CurrentUserHolder.updateProfile(response)
             }
 
@@ -70,6 +69,9 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
                 val response: LoginResponse = VotingApi.loginSuspending(dto)
                 InMemoryTokenHolder.saveToken(response.token)
                 fetchAndStoreUserProfile()
+
+                println("Login successful!")
+                println("Received Token: ${response.token}") // Log the token
                 onLoginSuccess()
 
             } catch (e: Throwable) {
@@ -116,6 +118,7 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             fontSize = 30.sp
         )
 
+        //Spacer(modifier = Modifier.height(24.dp))
 
         OutlinedTextField(
             value = egn,
@@ -146,6 +149,8 @@ fun LoginScreen(onLoginSuccess: () -> Unit, onNavigateToRegister: () -> Unit) {
             singleLine = true,
             isError = error != null
         )
+
+        //Spacer(modifier = Modifier.height(16.dp))
 
         Box(contentAlignment = Alignment.Center) {
             Button(

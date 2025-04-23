@@ -14,7 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.outlined.AddCircle
+import androidx.compose.material.icons.outlined.AddCircle // Placeholder icon
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
+import coil.compose.AsyncImage // Import Coil's AsyncImage
 import coil.request.ImageRequest
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -109,6 +109,7 @@ fun ProfileScreen(
                     Divider(modifier = Modifier.padding(vertical = 16.dp))
                 }
 
+                // ID Card Upload Section
                 item {
                     ProfileIdCardSection(
                         existingFrontUrl = userProfile.idCardFrontUrl,
@@ -178,6 +179,7 @@ fun ImageSelectorBox(
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
+                // Placeholder content when no image is available
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         imageVector = Icons.Outlined.AddCircle,
@@ -199,6 +201,7 @@ fun ImageSelectorBox(
 }
 
 
+// --- Preview ---
 @Preview(showBackground = true, widthDp = 380)
 @Composable
 fun ProfileScreenPreview() {
@@ -226,6 +229,7 @@ fun ProfileIdCardSection(
 ) {
     val context = LocalContext.current
 
+    // Observe state from the ViewModel
     val frontImageUri by viewModel.frontImageUri
     val backImageUri by viewModel.backImageUri
     val showDialog by viewModel.showDialog
@@ -233,6 +237,7 @@ fun ProfileIdCardSection(
     val isProcessing by viewModel.isProcessing
     val errorMessage by viewModel.errorMessage
 
+    // Remember the Snackbar host state
     val snackbarHostState = remember { SnackbarHostState() }
 
     var hasCameraPermission by remember {
@@ -253,6 +258,9 @@ fun ProfileIdCardSection(
             }
         }
     )
+
+
+    // Activity Result Launcher for taking a picture (remains the same)
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture(),
         onResult = { success ->
@@ -260,23 +268,32 @@ fun ProfileIdCardSection(
         }
     )
 
+    // Function to trigger camera launch safely via ViewModel
     fun launchCamera(side: CaptureSide) {
+        // <<< Log Function Entry >>>
         Log.d("CameraDebug", "launchCamera called for side: $side")
+        // <<< Log Current Permission State >>>
         Log.d("CameraDebug", "Current hasCameraPermission state: $hasCameraPermission")
 
         if (hasCameraPermission) {
+            // <<< Log Permission Granted Branch >>>
             Log.d("CameraDebug", "Permission check PASSED")
             viewModel.setCaptureSide(side)
             val uri = viewModel.createTempUri()
+            // <<< Log URI Creation Result >>>
             Log.d("CameraDebug", "viewModel.createTempUri() result: $uri")
             if (uri != null) {
+                // <<< Log Before Launching Camera >>>
                 Log.d("CameraDebug", "URI is valid. Launching takePictureLauncher...")
                 takePictureLauncher.launch(uri)
             } else {
-                Log.e("CameraDebug", "URI creation FAILED!")
+                // <<< Log URI Failure >>>
+                Log.e("CameraDebug", "URI creation FAILED!") // Use Log.e for errors
                 cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                //viewModel.errorMessage.value = "Грешка: Не може да се подготви място за снимка."
             }
         } else {
+            // <<< Log Permission Denied Branch >>>
             Log.d("CameraDebug", "Permission check FAILED. Launching permission request...")
             cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
         }
@@ -310,6 +327,7 @@ fun ProfileIdCardSection(
                     launchCamera(CaptureSide.FRONT) }
             )
 
+            // Back Side Box
             ImageSelectorBox(
                 modifier = Modifier.weight(1f),
                 label = "Задна страна",
@@ -330,7 +348,7 @@ fun ProfileIdCardSection(
             ) {
                 CircularProgressIndicator()
                 Text(
-                    "Обработка...",
+                    "Обработка...", // "Processing..."
                     modifier = Modifier.padding(top = 60.dp),
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -388,13 +406,14 @@ fun ConfirmationDialog(
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
 
+
                 Text("Имена:", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(bottom = 4.dp))
                 OutlinedTextField(
                     value = editedGivenName,
                     onValueChange = { editedGivenName = it },
                     label = { Text("Име / Given Name(s)") },
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                    singleLine = true
+                    singleLine = true // Usually single line
                 )
                 OutlinedTextField(
                     value = editedFatherName,
@@ -416,7 +435,7 @@ fun ConfirmationDialog(
                 OutlinedTextField(
                     value = editedEgn,
                     onValueChange = { editedEgn = it },
-                    label = { Text("ЕГН") },
+                    label = { Text("ЕГН") }, // "EGN"
                     modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
                     singleLine = true
                 )

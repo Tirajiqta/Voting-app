@@ -53,6 +53,7 @@ fun ElectionChoiceScreen(
     val context = LocalContext.current
     val appDatabase = remember { AppDatabase.getInstance(context.applicationContext) }
 
+// Get DAOs from the Room database instance
     val electionDao = appDatabase.electionDao()
     val candidateDao = appDatabase.candidateDao()
     val partyDao = appDatabase.partyDao()
@@ -66,12 +67,13 @@ fun ElectionChoiceScreen(
         voteDao = voteDao
     )}
 
+    // Create the ViewModel Factory instance
     val electionChoiceViewModelFactory = remember {
-        ElectionChoiceViewModelFactory(electionsRepository)
+        ElectionChoiceViewModelFactory(electionsRepository) // Pass the repository instance
     }
 
     val viewModel: ElectionChoiceViewModel = viewModel(
-        factory = electionChoiceViewModelFactory
+        factory = electionChoiceViewModelFactory // <--- PROVIDE THE FACTORY HERE
     )
 
     val uiState by viewModel.uiState.collectAsState()
@@ -91,7 +93,7 @@ fun ElectionChoiceScreen(
     LaunchedEffect(uiState.elections, uiState.isLoading) {
         if (!uiState.isLoading && uiState.elections.size == 1) {
             val singleElectionId = uiState.elections.first().id ?: -1L
-            if (singleElectionId != -1L) {
+            if (singleElectionId != -1L) { // Only navigate if ID is valid
                 onNavigateToVote(listOf(singleElectionId))
             }
         }
@@ -117,9 +119,11 @@ fun ElectionChoiceScreen(
             contentAlignment = Alignment.Center
         ) {
             when {
+                // Loading State
                 uiState.isLoading -> {
                     CircularProgressIndicator()
                 }
+                // Error State
                 uiState.error != null -> {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
@@ -133,6 +137,7 @@ fun ElectionChoiceScreen(
                         }
                     }
                 }
+                // Empty State
                 uiState.elections.isEmpty() -> {
                     Text("Няма активни избори в момента.")
                 }
@@ -192,8 +197,10 @@ fun ElectionChoiceScreen(
                         }
                     }
                 }
+
                 uiState.elections.size == 1 -> {
-                    Spacer(Modifier.fillMaxSize())
+
+                    Spacer(Modifier.fillMaxSize()) // Keep the space occupied
                 }
             }
         }
@@ -222,6 +229,7 @@ fun CheckboxWithLabel(
         Text(text = label, fontSize = 16.sp)
     }
 }
+
 
 @Preview(showBackground = true, name = "Selection Screen - Loading")
 @Composable
@@ -273,7 +281,7 @@ fun ElectionSelectionScreenNonePreview() {
 @Composable
 private fun PreviewableElectionChoiceScreen(
     uiState: ElectionChoiceUiState,
-    onNavigateToVote: (List<Long>) -> Unit = {}
+    onNavigateToVote: (List<Long>) -> Unit = {} // Dummy action
 ) {
     val context = LocalContext.current
     val selectedStates = remember { mutableStateMapOf<Long, Boolean>() }

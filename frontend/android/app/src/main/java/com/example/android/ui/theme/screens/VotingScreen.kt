@@ -1,6 +1,7 @@
 package com.example.android.ui.theme.screens
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -37,15 +38,16 @@ import kotlinx.coroutines.launch
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun VotingScreen(
+fun VotingScreen( // This is the wrapper/container composable
     navController: NavController,
     electionId: Long,
     userId: Long
 ) {
+    // --- ViewModel Setup (Same as before) ---
     val context = LocalContext.current
     val appDatabase = remember { AppDatabase.getInstance(context.applicationContext) }
     val electionsRepository = remember {
-        ElectionsRepository(
+        ElectionsRepository( /* ... DAOs ... */
             electionDao = appDatabase.electionDao(),
             candidateDao = appDatabase.candidateDao(),
             partyDao = appDatabase.partyDao(),
@@ -54,22 +56,27 @@ fun VotingScreen(
         )
     }
     val savedStateHandle = remember { SavedStateHandle(mapOf("electionId" to electionId)) }
-
     val viewModel: VotingViewModel = viewModel(
         factory = VotingViewModelFactory(electionsRepository, savedStateHandle)
     )
 
+    // --- State Collection ---
     val uiState by viewModel.uiState.collectAsState()
     var showConfirmationDialog by remember { mutableStateOf(false) }
+    // Store the IDs to be saved when the dialog is confirmed
+    var partyIdToSave by remember { mutableStateOf<Int?>(null) }
+    var preferenceIdToSave by remember { mutableStateOf<Long?>(null) }
+
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // --- Effects for Navigation and Snackbar (Same as before) ---
     LaunchedEffect(uiState.voteSavedSuccessfully) {
         if (uiState.voteSavedSuccessfully) {
+            // ONLY show snackbar here, DO NOT navigate or pop back stack
             scope.launch {
-                snackbarHostState.showSnackbar("Гласът е запазен успешно!") // Optional feedback
+                snackbarHostState.showSnackbar("Гласът е запазен успешно!")
             }
-            navController.popBackStack()
         }
     }
 
@@ -78,45 +85,27 @@ fun VotingScreen(
             scope.launch {
                 snackbarHostState.showSnackbar(errorMsg, duration = SnackbarDuration.Long)
             }
+            viewModel.clearError() // Clear error after showing
         }
     }
 
-
+    // --- UI ---
     Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        topBar = {
-            TopAppBar(
-                title = { Text(uiState.electionName.ifEmpty { "Гласуване" }) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant
-                )
-            )
-        },
-        bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ) {
-                Spacer(Modifier.weight(1f))
-                Button(
-                    onClick = { showConfirmationDialog = true },
-                    enabled = uiState.selectedPartyId != null && uiState.selectedCandidateId != null && !uiState.isLoading,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    Text("Следващ")
-                }
-            }
-        }
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
 
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
             when {
+                // Initial Loading State
                 uiState.isLoading && uiState.parties.isEmpty() -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
+                // Initial Error State
                 !uiState.isLoading && uiState.error != null && uiState.parties.isEmpty() -> {
                     Text(
                         text = uiState.error ?: "Възникна грешка",
@@ -128,80 +117,31 @@ fun VotingScreen(
                     )
                 }
 
+                // Data Loaded State
                 else -> {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(8.dp)
-                    ) {
-                        LazyColumn(
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(end = 4.dp)
-                                .border(1.dp, MaterialTheme.colorScheme.outline)
-                        ) {
-                            items(uiState.parties, key = { it.id }) { party ->
-                                PartyItem(
-                                    party = party,
-                                    isSelected = party.id == uiState.selectedPartyId,
-                                    onPartyClick = { viewModel.selectParty(party.id) }
-                                )
-                                Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                            }
+                    ParliamentVoteScreen(
+                        // Pass data from ViewModel State
+                        electionTitle = uiState.electionTitle,
+                        electionDate = uiState.electionDate,
+                        parties = uiState.parties,
+                        candidates = uiState.candidates,
+                        onNavigateBack = { navController.popBackStack() }, // Simple back navigation
+                        onReviewVote = { selectedPartyId, selectedPreferenceId ->
+                            // Store the selected IDs and show the dialog
+                            partyIdToSave = selectedPartyId
+                            preferenceIdToSave = selectedPreferenceId
+                            showConfirmationDialog = true
                         }
+                    )
 
-                        Column(
+                    // Overlay loading indicator when saving vote
+                    if (uiState.isLoading && !uiState.parties.isEmpty()) {
+                        Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .padding(start = 4.dp)
-                                .border(1.dp, MaterialTheme.colorScheme.outline)
-                                .padding(8.dp)
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.3f)),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                "Предпочитание (Преференция)",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 8.dp),
-                                textAlign = TextAlign.Center
-                            )
-                            if (uiState.selectedPartyId == null) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text("Моля, изберете партия", textAlign = TextAlign.Center)
-                                }
-                            } else if (uiState.candidatesForSelectedParty.isEmpty()) {
-                                Box(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        "Няма преференции за тази партия",
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            } else {
-                                LazyVerticalGrid(
-                                    columns = GridCells.Adaptive(minSize = 50.dp),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    items(uiState.candidatesForSelectedParty, key = { it.id }) { candidate ->
-                                        PreferenceItem(
-                                            candidate = candidate,
-                                            isSelected = candidate.id == uiState.selectedCandidateId,
-                                            onPreferenceClick = { viewModel.selectCandidate(candidate.id) }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if (uiState.isLoading && uiState.selectedPartyId != null) {
-                        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f)), contentAlignment = Alignment.Center){
                             CircularProgressIndicator()
                         }
                     }
@@ -209,17 +149,59 @@ fun VotingScreen(
             }
         }
 
+        //Confirmation Dialog (Remains the same, triggered differently)
         if (showConfirmationDialog) {
             ConfirmationDialog(
                 onConfirm = {
                     showConfirmationDialog = false
-                    viewModel.saveVote(userId)
+                    // Use the stored IDs to save the vote
+                    partyIdToSave?.let { pId -> // pId is the Party's Int ID from UI
+                        val selectedPreferenceNumber = preferenceIdToSave // The Int preference number
+
+                        var actualCandidatePrimaryKey: Long? = null
+                        if (selectedPreferenceNumber != null) {
+                            val foundCandidate = uiState.candidates.firstOrNull { candidate ->
+                                candidate.partyId == pId && candidate.preferenceNumber.toLong() == selectedPreferenceNumber
+                            }
+
+                            if (foundCandidate != null) {
+                                actualCandidatePrimaryKey =
+                                    (foundCandidate.id ?: 1) as Long? // Get the actual Long PK
+                                Log.d("VOTE_SAVE_UI_MAP", "UI Mapping: Found PK $actualCandidatePrimaryKey for Pref $selectedPreferenceNumber in Party $pId")
+                            } else {
+                                Log.e("VOTE_SAVE_UI_MAP", "UI Mapping ERROR: Candidate not found for Pref $selectedPreferenceNumber in Party $pId")
+                                scope.launch { snackbarHostState.showSnackbar("Грешка: Избраната преференция е невалидна за тази партия.") }
+                                partyIdToSave = null
+                                preferenceIdToSave = null
+                                return@let
+                            }
+                        } else {
+                            Log.d("VOTE_SAVE_UI_MAP", "UI Mapping: No preference selected, candidate PK remains null.")
+                            actualCandidatePrimaryKey = null
+                        }
+                        navController.navigate("home") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
+                        }
+
+                    }
+                    partyIdToSave = null
+                    preferenceIdToSave = null
                 },
-                onDismiss = { showConfirmationDialog = false }
+                onDismiss = {
+                    showConfirmationDialog = false
+                    partyIdToSave = null
+                    preferenceIdToSave = null
+                }
             )
         }
     }
 }
+
+
+
 
 @Composable
 fun PartyItem(
@@ -238,7 +220,7 @@ fun PartyItem(
         Text(
             text = "${party.number}",
             modifier = Modifier
-                .width(30.dp)
+                .width(30.dp) // Fixed width for number box
                 .border(1.dp, MaterialTheme.colorScheme.outline)
                 .padding(vertical = 4.dp),
             textAlign = TextAlign.Center,
@@ -250,7 +232,7 @@ fun PartyItem(
             text = party.name,
             color = if (isSelected) MaterialTheme.colorScheme.inverseOnSurface else LocalContentColor.current,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f) // Take remaining space
         )
     }
 }
@@ -319,6 +301,7 @@ fun ConfirmationDialog(
         confirmButton = {
             Button(onClick = onConfirm) {
                 Text("Да")
+
             }
         },
         dismissButton = {
