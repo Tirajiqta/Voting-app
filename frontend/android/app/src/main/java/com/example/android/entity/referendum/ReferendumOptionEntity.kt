@@ -1,19 +1,21 @@
 package com.example.android.entity.referendum
 
-import com.example.android.db.orm.Column
-import com.example.android.db.orm.Table
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-@Table(name = "referendum_options")
+@Entity(tableName = "referendum_options")
 data class ReferendumOptionEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id")
     val id: Long? = null,
 
-    @Column(name = "option_text")
+    @ColumnInfo(name = "option_text")
     val optionText: String,
 
-    @Column(name = "vote_count")
+    @ColumnInfo(name = "vote_count")
     val voteCount: Int = 0,
 
-    @Column(name = "referendum_id")
+    @ColumnInfo(name = "referendum_id")
     val referendumId: Long
 )

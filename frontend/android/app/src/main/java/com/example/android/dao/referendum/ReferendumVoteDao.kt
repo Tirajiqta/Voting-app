@@ -1,10 +1,23 @@
 package com.example.android.dao.referendum
 
-import android.database.sqlite.SQLiteDatabase
-//import com.example.android.dao.GenericDao
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import com.example.android.entity.referendum.ReferendumVoteEntity
 
-class ReferendumVoteDao(db: SQLiteDatabase)
-{
+@Dao
+interface ReferendumVoteDao {
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insert(vote: ReferendumVoteEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertAll(votes: List<ReferendumVoteEntity>)
+
+    @Query("SELECT * FROM referendum_votes WHERE id = :id")
+    fun getById(id: Long): ReferendumVoteEntity?
+
+    @Query("SELECT * FROM referendum_votes WHERE user_id = :userId")
+    fun getByUserId(userId: Long): List<ReferendumVoteEntity>
 
 }

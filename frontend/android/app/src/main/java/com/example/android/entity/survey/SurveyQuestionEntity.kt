@@ -1,16 +1,15 @@
 package com.example.android.entity.survey
 
-import com.example.android.db.orm.Column
-import com.example.android.db.orm.Table
+import androidx.room.ColumnInfo
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-@Table(name = "survey_questions")
+@Entity(tableName = "survey_questions")
 data class SurveyQuestionEntity(
-    @Column(name = "id", primaryKey = true, autoIncrement = true)
+    @PrimaryKey(autoGenerate = true)
     val id: Long? = null,
-
-    @Column(name = "question_text")
+    @ColumnInfo(name = "question_text")
     val questionText: String,
-
-    @Column(name = "survey_id")
+    @ColumnInfo(name = "survey_id")
     val surveyId: Long
 )
